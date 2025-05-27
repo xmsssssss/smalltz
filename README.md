@@ -1,4 +1,6 @@
 # xmtz
+BUG巨多 不对外开放
+
 一个自用python小探针(python3.8+)
 
 1.无安全措施
