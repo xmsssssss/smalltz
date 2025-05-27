@@ -1,5 +1,5 @@
 # xmtz
-一个自用python小探针
+一个自用python小探针(python3.8+)
 
 1.无安全措施
 
@@ -16,18 +16,20 @@
 # 服务端
 
 打包下载，同目录直接执行以下代码：
->c
+>pip3 install -r requirements.txt
 
->nohup python start.py -p 60000,60001,admin,admin
+>nohup python3 start.py -p 60000,60001,admin,admin
 
 "60000,60001,admin,admin"分别代表web端口、通信端口、web登录账号、web登录密码
 
 # 客户端
 
 下载client.py
->pip install psutil 
+>pip3 install websockets
+>
+>pip3 install psutil 
 
->nohup python client.py -p ip:60001,银河超算,5
+>nohup python3 client.py -p ip:60001,银河超算,5
 
 "ip:60001,银河超算,5"分别代表服务端ip、服务端ip通信端口、客户端名、定时上传间隔
 
