@@ -16,14 +16,18 @@
 # 服务端
 
 打包下载，同目录直接执行以下代码：
->nohup python start.py -p "60000,60001,admin,admin"
+>c
+
+>nohup python start.py -p 60000,60001,admin,admin
 
 "60000,60001,admin,admin"分别代表web端口、通信端口、web登录账号、web登录密码
 
 # 客户端
 
 下载client.py
->nohup python client.py -p "ip:60001,银河超算,5"
+>pip install psutil 
+
+>nohup python client.py -p ip:60001,银河超算,5
 
 "ip:60001,银河超算,5"分别代表服务端ip、服务端ip通信端口、客户端名、定时上传间隔
 
