@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>探针状态监控</title>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/bootstrap-icons.css">
+    <style id="theme-style">
+        html, body {
+            height: 100%;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(120deg, #23242a 60%, #2d3a4b 100%);
+        }
+        .container {
+            width: 100%;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding: 24px 0 18px 0;
+            box-shadow: 0 4px 24px 0 #6ec1e422;
+            /* background: rgba(88, 173, 223, 0.92); */
+        }
+        .logo {
+            font-size: 2.1rem;
+            font-weight: bold;
+            color: #6ec1e4;
+            letter-spacing: 2px;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            text-shadow: 0 2px 8px #6ec1e433;
+            margin-left: 25px;
+        }
+        .logo i {
+            font-size: 2.5rem;
+            margin-right: 12px;
+        }
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-right: 20px;
+        }
+        .login-btn, .theme-btn {
+            color: #fff;
+            background: linear-gradient(90deg, #6ec1e4 0%, #2980b9 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 8px 22px;
+            font-size: 1.08rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+            box-shadow: 0 2px 8px #6ec1e433;
+        }
+        .login-btn:hover, .theme-btn:hover {
+            background: linear-gradient(90deg, #2980b9 0%, #6ec1e4 100%);
+            color: #23242a;
+            box-shadow: 0 4px 16px #6ec1e444;
+        }
+        .theme-btn {
+            padding: 8px 16px;
+            font-size: 1.25rem;
+        }
+        .stat-bar {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: linear-gradient(120deg, #23242a 60%, #6ec1e4 100%);
+            border-radius: 20px;
+            padding: 28px 38px;
+            min-width: 220px;
+            box-shadow: 0 4px 24px 0 #6ec1e422;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .stat-card:hover {
+            box-shadow: 0 8px 32px 0 #6ec1e444;
+            transform: translateY(-2px) scale(1.03);
+        }
+        .stat-title {
+            font-size: 1.1rem;
+            color: #b8c6db;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-top: 4px;
+            color: #fff;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px #6ec1e433;
+        }
+        .stat-value .unit {
+            font-size: 1.1rem;
+            color: #6ec1e4;
+            margin-left: 4px;
+        }
+        .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .dot-blue { background: #3498db; }
+        .dot-green { background: #27ae60; }
+        .dot-red { background: #e74c3c; }
+        #clients-container {
+            margin: 0 auto;
+            margin-top: 24px;
+            margin-bottom: 32px;
+            max-width: 1200px;
+            background: rgba(30, 30, 32, 0.82);
+            border-radius: 28px;
+            box-shadow: 0 8px 48px 0 #6ec1e422;
+            padding: 0 0 0 0;
+            /* min-height: 320px; */
+            width: 94%;
+            backdrop-filter: blur(6px);
+        }
+        .client-list-row {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding: 22px 38px;
+            border-bottom: 1px solid #2d3a4b;
+            transition: background 0.18s;
+            min-height: 0;
+        }
+        .client-list-row:last-child {
+            border-bottom: none;
+        }
+        .client-list-row.offline {
+            opacity: 0.5;
+            filter: grayscale(0.3);
+        }
+        .client-list-row:hover {
+            background: rgba(110,193,228,0.10);
+        }
+        .client-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            font-size: 1.08rem;
+        }
+        .client-status-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            box-shadow: 0 0 8px 0 rgba(40,167,69,0.18);
+        }
+        .client-status-dot.online {
+            background: #28a745;
+            box-shadow: 0 0 12px 2px #28a74555;
+        }
+        .client-status-dot.offline {
+            background: #dc3545;
+            box-shadow: 0 0 12px 2px #dc354555;
+        }
+        .client-id {
+            color: #8bb0c7;
+            font-size: 1.08em;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .client-info-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 10px 32px;
+            margin: 0;
+            padding: 0;
+        }
+        .info-item {
+            display: flex;
+            align-items: center;
+            font-size: 1.08rem;
+            min-width: 120px;
+            background: rgba(110,193,228,0.08);
+            border-radius: 8px;
+            padding: 4px 12px;
+            margin-right: 6px;
+            margin-bottom: 4px;
+            transition: background 0.2s;
+        }
+        .info-item i {
+            font-size: 1.2rem;
+            margin-right: 8px;
+            color: #6ec1e4;
+        }
+        .info-label {
+            color: #b8c6db;
+            margin-right: 6px;
+        }
+        .info-value {
+            font-weight: bold;
+            color: #fff;
+        }
+        .info-unit {
+            color: #6ec1e4;
+            font-size: 0.98em;
+            margin-left: 2px;
+        }
+        body.light {
+            background: linear-gradient(120deg, #f5f7fa 60%, #c3cfe2 100%);
+            color: #222;
+        }
+        body.light .stat-card {
+            background: linear-gradient(120deg, #e0e6ef 60%, #6ec1e4 100%);
+            color: #222;
+        }
+        body.light #clients-container {
+            background: #fff;
+            box-shadow: 0 2px 8px #c3cfe2cc;
+        }
+        body.light .info-value {
+            color: #222;
+        }
+        body.light .info-label { color: #2980b9; }
+        body.light .info-item i { color: #2980b9; }
+        body.light .login-btn, body.light .theme-btn {
+            color: #fff;
+            background: linear-gradient(90deg, #2980b9 0%, #6ec1e4 100%);
+        }
+        body.light .login-btn:hover, body.light .theme-btn:hover {
+            background: linear-gradient(90deg, #6ec1e4 0%, #2980b9 100%);
+            color: #2980b9;
+        }
+        @media (max-width: 1400px) {
+            #clients-container {
+                max-width: 98vw;
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+        }
+        @media (max-width: 900px) {
+            .stat-bar { gap: 12px; }
+            .stat-card { padding: 18px 10px; min-width: 120px; }
+            .client-list-row { padding: 14px 8px; }
+        }
+        @media (max-width: 700px) {
+            .client-info-list { flex-direction: column; gap: 6px 0; }
+            .client-list-row { flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 2px; }
+            #clients-container { border-radius: 8px; padding-left: 2px; padding-right: 2px; }
+            .top-bar { flex-direction: column; gap: 8px; padding: 12px 0 8px 0; }
+            .logo { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-2">
+        <div class="top-bar">
+            <div class="logo"><i class="bi bi-shield-lock"></i> 探针监控</div>
+            <div class="top-actions">
+                {% if is_logged_in %}
+                    <button class="login-btn" onclick="window.location.href='/admin'">后台管理</button>
+                {% else %}
+                    <button class="login-btn" onclick="window.location.href='/login'">登录</button>
+                {% endif %}
+                <button class="theme-btn" id="theme-toggle"><i class="bi bi-brightness-high"></i></button>
+            </div>
+        </div>
+        <div class="stat-bar">
+            <div class="stat-card">
+                <div class="stat-title"><span class="dot dot-blue"></span>服务器总数</div>
+                <div class="stat-value" id="stat-total">0 <span class="unit">台</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title"><span class="dot dot-green"></span>在线服务器</div>
+                <div class="stat-value" id="stat-online">0 <span class="unit">台</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title"><span class="dot dot-red"></span>离线服务器</div>
+                <div class="stat-value" id="stat-offline">0 <span class="unit">台</span></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card-body p-0" style="background:none;box-shadow:none;border:none;">
+                    <div id="clients-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script>
+    // 白天/黑夜切换
+    const themeBtn = document.getElementById('theme-toggle');
+    function setTheme(light) {
+        document.body.classList.toggle('light', light);
+        themeBtn.innerHTML = light ? '<i class="bi bi-moon"></i>' : '<i class="bi bi-brightness-high"></i>';
+        localStorage.setItem('theme', light ? 'light' : 'dark');
+    }
+    themeBtn.onclick = () => setTheme(!document.body.classList.contains('light'));
+    if(localStorage.getItem('theme')==='light') setTheme(true);
+
+    // 工具函数
+    function fmtPercent(val) {
+        return val !== undefined && val !== null ? val.toFixed(1) + '%' : '-';
+    }
+    function fmtMB(val) {
+        return val !== undefined && val !== null ? (val/1024/1024).toFixed(2) : '-';
+    }
+    function fmtUptime(boot) {
+        if (!boot) return '-';
+        const sec = Math.floor(Date.now()/1000 - boot);
+        const d = Math.floor(sec/86400), h = Math.floor((sec%86400)/3600), m = Math.floor((sec%3600)/60);
+        return (d>0?d+'天':'') + (h>0?(' '+h+'小时'):'') + (m>0?(' '+m+'分'):'');
+    }
+
+    // 渲染客户端卡片和统计
+    function renderClients(clients) {
+        const now = Date.now()/1000;
+        let online = 0, offline = 0;
+        let html = '';
+        clients.forEach(client => {
+            let status = {};
+            let validStatus = false;
+            try {
+                status = JSON.parse(client.status);
+                validStatus = status && typeof status === 'object' && status.system;
+            } catch(e){ validStatus = false; }
+            // 修正last_seen解析
+            let lastSeen = 0;
+            try {
+                let ls = client.last_seen.split('.')[0];
+                if (ls.length === 19) ls += 'Z';
+                lastSeen = Date.parse(ls)/1000;
+            } catch(e) { lastSeen = 0; }
+            const isOnline = client.is_active && validStatus && (now - lastSeen < 30);
+            if(isOnline) online++; else offline++;
+            const sys = status.system || {};
+            const net = status.network || {};
+            const clientName = decodeURIComponent(client.client_id);
+            html += `<div class="client-list-row${isOnline?'':' offline'}">
+                <div class="client-main">
+                    <span class="client-status-dot ${isOnline?'online':'offline'}"></span>
+                    <span class="client-id">${clientName}</span>
+                </div>
+                <ul class="client-info-list">
+                    <li class="info-item"><i class="bi bi-pc"></i><span class="info-label">系统</span><span class="info-value">${sys.platform||'-'}</span></li>
+                    <li class="info-item"><i class="bi bi-cpu"></i><span class="info-label">CPU</span><span class="info-value">${fmtPercent(sys.cpu_percent)}</span></li>
+                    <li class="info-item"><i class="bi bi-memory"></i><span class="info-label">内存</span><span class="info-value">${fmtPercent(sys.memory_percent)}</span></li>
+                    <li class="info-item"><i class="bi bi-hdd"></i><span class="info-label">硬盘</span><span class="info-value">${fmtPercent(sys.disk_usage)}</span></li>
+                    <li class="info-item"><i class="bi bi-clock-history"></i><span class="info-label">运行时长</span><span class="info-value">${fmtUptime(sys.boot_time)}</span></li>
+                    <li class="info-item"><i class="bi bi-arrow-up-right-circle"></i><span class="info-label">已发送</span><span class="info-value">${fmtMB(net.bytes_sent)}</span><span class="info-unit">MiB</span></li>
+                    <li class="info-item"><i class="bi bi-arrow-down-left-circle"></i><span class="info-label">已接收</span><span class="info-value">${fmtMB(net.bytes_recv)}</span><span class="info-unit">MiB</span></li>
+                </ul>
+            </div>`;
+        });
+        const container = document.getElementById('clients-container');
+        container.innerHTML = html;
+        document.getElementById('stat-total').innerText = clients.length;
+        document.getElementById('stat-online').innerText = online;
+        document.getElementById('stat-offline').innerText = offline;
+    }
+
+    // 定时获取并渲染
+    async function fetchClients() {
+        try {
+            const res = await fetch('/api/clients');
+            const clients = await res.json();
+            renderClients(clients);
+        } catch(e) {
+            document.getElementById('clients-container').innerHTML = '<div class="text-center text-danger">无法获取客户端数据</div>';
+            document.getElementById('stat-total').innerText = 0;
+            document.getElementById('stat-online').innerText = 0;
+            document.getElementById('stat-offline').innerText = 0;
+            console.error('fetchClients error:', e);
+        }
+    }
+    fetchClients();
+    setInterval(fetchClients, 5000);
+    </script>
+</body>
+</html> 

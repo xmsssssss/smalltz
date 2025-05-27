@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>管理面板 - 探针服务</title>
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/bootstrap-icons.css">
+    <style>
+        html, body {
+            height: 100%;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(120deg, #f5f7fa 60%, #c3cfe2 100%);
+            color: #222;
+        }
+        .admin-header {
+            width: 100%;
+            background: linear-gradient(90deg, #e0e6ef 60%, #6ec1e4 100%);
+            border-radius: 0 0 18px 18px;
+            box-shadow: 0 4px 24px 0 #6ec1e422;
+            padding: 32px 0 24px 0;
+            margin-bottom: 32px;
+            text-align: center;
+        }
+        .admin-logo {
+            font-size: 2.2rem;
+            color: #2980b9;
+            font-weight: bold;
+            letter-spacing: 2px;
+            user-select: none;
+            text-shadow: 0 2px 8px #6ec1e433;
+        }
+        .admin-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 16px;
+            margin-top: 12px;
+            margin-right: 32px;
+        }
+        .admin-btn {
+            color: #fff;
+            background: linear-gradient(90deg, #6ec1e4 0%, #2980b9 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 22px;
+            font-size: 1.08rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+            box-shadow: 0 2px 8px #6ec1e433;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .admin-btn:hover {
+            background: linear-gradient(90deg, #2980b9 0%, #6ec1e4 100%);
+            color: #23242a;
+            box-shadow: 0 4px 16px #6ec1e444;
+        }
+        .client-card {
+            margin-bottom: 24px;
+            background: #fff;
+            border-radius: 18px;
+            color: #222;
+            box-shadow: 0 2px 16px 0 #6ec1e422;
+            transition: transform 0.18s, box-shadow 0.18s;
+        }
+        .client-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 8px 32px 0 #6ec1e444;
+        }
+        .status-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-online {
+            background-color: #cdea4a;
+            box-shadow: 0 0 8px 2px #27ae6055;
+        }
+        .status-offline {
+            background-color: #e74c3c;
+            box-shadow: 0 0 8px 2px #e74c3c55;
+        }
+        .client-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .client-title-row h5 {
+            margin-bottom: 0;
+            color: #2980b9;
+        }
+        .btn-toggle {
+            min-width: 72px;
+            border-radius: 8px;
+            font-weight: bold;
+            background: linear-gradient(90deg, #6ec1e4 0%, #2980b9 100%);
+            border: none;
+            color: #fff;
+            transition: background 0.2s;
+        }
+        .btn-toggle.btn-warning {
+            background: linear-gradient(90deg, #f39c12 0%, #e67e22 100%);
+            color: #fff;
+        }
+        .btn-toggle.btn-success {
+            background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%);
+            color: #fff;
+        }
+        .btn-toggle.btn-danger {
+            background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
+            color: #fff;
+        }
+        .btn-toggle:hover {
+            filter: brightness(1.08);
+        }
+        .status-data {
+            background: #f5f7fa;
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #2980b9;
+            font-size: 0.98rem;
+            margin-bottom: 8px;
+        }
+        .client-actions {
+            display: flex;
+            gap: 8px;
+        }
+        @media (max-width: 600px) {
+            .admin-header { padding: 18px 0 12px 0; }
+            .client-title-row { flex-direction: column; align-items: flex-start; }
+            .admin-actions { flex-direction: column; gap: 8px; margin-right: 0; }
+            .client-actions { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <div class="admin-logo">🛡️ 探针管理面板</div>
+        <div class="admin-actions">
+            <a href="/" class="admin-btn"><i class="bi bi-house-door"></i> 返回主页</a>
+            <a href="/logout" class="admin-btn">退出登录</a>
+        </div>
+    </div>
+    <div class="container">
+        <h3 class="mb-4" style="color:#2980b9;">所有客户端</h3>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="clients-container">
+                    <!-- 客户端列表由JS动态渲染 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    async function fetchClients() {
+        const res = await fetch('/api/clients');
+        const clients = await res.json();
+        renderClients(clients);
+    }
+    function renderClients(clients) {
+        let html = '';
+        clients.forEach(client => {
+            html += `<div class="client-card card mb-3" id="client-${client.client_id}">
+                <div class="card-body">
+                    <div class="client-title-row mb-2">
+                        <h5 class="card-title">
+                            <span class="status-indicator ${client.is_active ? 'status-online' : 'status-offline'}"></span>
+                            ${decodeURIComponent(client.name)}
+                        </h5>
+                        <div class="client-actions">
+                            <button type="button" class="btn btn-toggle btn-sm btn-danger" onclick="deleteClient('${client.client_id}')">
+                                删除
+                            </button>
+                            <button type="button" class="btn btn-toggle btn-sm ${client.is_active ? 'btn-warning' : 'btn-success'}" onclick="toggleClient('${client.client_id}')">
+                                ${client.is_active ? '隐藏' : '显示'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="status-data mb-2">
+                        <pre style="margin:0; background:none; border:none; color:#2980b9;">${client.status}</pre>
+                    </div>
+                </div>
+            </div>`;
+        });
+        document.getElementById('clients-container').innerHTML = html;
+    }
+    async function toggleClient(clientId) {
+        await fetch(`/api/clients/${clientId}/toggle`, { method: 'POST' });
+        fetchClients();
+    }
+
+    async function deleteClient(clientId) {
+        if (!confirm('确定要删除这个客户端吗？此操作不可恢复！')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/clients/${clientId}`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                const element = document.getElementById(`client-${clientId}`);
+                element.remove();
+            } else {
+                alert('删除失败，请重试');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('删除失败，请重试');
+        }
+    }
+    fetchClients();
+    </script>
+</body>
+</html>

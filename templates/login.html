@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 探针服务端</title>
+    <link href="../templates/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f5f7fa;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .logo h1 {
+            color: #1a73e8;
+            font-size: 1.8rem;
+            margin: 0;
+        }
+        .form-control {
+            border-radius: 5px;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+        }
+        .btn {
+            padding: 0.8rem;
+            border-radius: 5px;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: #1a73e8;
+            border: none;
+        }
+        .btn-secondary {
+            background: #f8f9fa;
+            border: 1px solid #dadce0;
+            color: #3c4043;
+        }
+        .error-message {
+            color: #d93025;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .form-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .form-footer a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>探针服务端</h1>
+        </div>
+        {% if error %}
+        <div class="error-message">
+            {{ error }}
+        </div>
+        {% endif %}
+        <form method="POST" action="/login">
+            <input type="text" name="username" class="form-control" placeholder="账号" required>
+            <input type="password" name="password" class="form-control" placeholder="密码" required>
+            <div class="form-footer">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                    <label class="form-check-label" for="remember">记住账号</label>
+                </div>
+                <a href="/reset-password">重装账号密码</a>
+            </div>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary">登录</button>
+                <button type="reset" class="btn btn-secondary">清除</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
