@@ -16,7 +16,14 @@ from passlib.hash import bcrypt
 
 # 数据库配置
 SQLALCHEMY_DATABASE_URL = "sqlite:///./probe.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    pool_size=20,
+    max_overflow=10,
+    pool_timeout=30,
+    pool_recycle=1800
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -44,7 +51,7 @@ Base.metadata.create_all(bind=engine)
 def init_admin_user():
     db = SessionLocal()
     if db.query(User).count() == 0:
-        admin_user = User(username=config["username"], password=bcrypt.hash(config["password"]))
+        admin_user = User(username="admin", password=bcrypt.hash("admin"))
         db.add(admin_user)
         db.commit()
     db.close()
@@ -53,8 +60,8 @@ def init_admin_user():
 config = {
     "web_port": 60000,
     "ws_port": 60001,
-    "username": "admin",
-    "password": "admin"
+    "username": "",
+    "password": ""
 }
 
 if __name__ == "__main__":
@@ -65,11 +72,18 @@ if __name__ == "__main__":
     if args.config:
         try:
             with open(args.config, 'r', encoding='utf-8') as f:
-                config.update(json.load(f))
+                user_config = json.load(f)
+                if "web_port" in user_config:
+                    config["web_port"] = user_config["web_port"]
+                if "ws_port" in user_config:
+                    config["ws_port"] = user_config["ws_port"]
+                if "username" in user_config:
+                    config["username"] = user_config["username"]
+                    config["password"] = user_config["password"]
         except Exception as e:
             print(f"读取配置文件失败: {e}")
             exit(1)
-    # 重新初始化账号（防止config未被正确覆盖）
+    # 初始化账号（使用默认的admin/admin）
     init_admin_user()
     uvicorn.run("web:app", host="0.0.0.0", port=config["web_port"], reload=True)
 else:
@@ -89,6 +103,10 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
+    except Exception as e:
+        print(f"数据库操作错误: {e}")
+        db.rollback()
+        raise
     finally:
         db.close()
 
@@ -101,20 +119,33 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
             data = await websocket.receive_text()
             # 更新客户端状态
             db = SessionLocal()
-            client = db.query(Client).filter(Client.client_id == client_id).first()
-            if client:
-                client.status = data
-                client.last_seen = datetime.utcnow()
-                db.commit()
-            db.close()
-            print(f"收到客户端 {client_id} 状态: {data}")
+            try:
+                client = db.query(Client).filter(Client.client_id == client_id).first()
+                if client:
+                    client.status = data
+                    client.last_seen = datetime.utcnow()
+                    db.commit()
+                print(f"收到客户端 {client_id} 状态: {data}")
+            except Exception as e:
+                print(f"更新客户端状态失败: {e}")
+                db.rollback()
+            finally:
+                db.close()
     except WebSocketDisconnect:
         del active_connections[client_id]
+    except Exception as e:
+        print(f"WebSocket连接异常: {e}")
+        if client_id in active_connections:
+            del active_connections[client_id]
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request, db: Session = Depends(get_db)):
     clients = db.query(Client).filter(Client.is_active == True).all()
-    is_logged_in = request.session.get("user") == config["username"]
+    username = request.session.get("user")
+    is_logged_in = False
+    if username:
+        user = db.query(User).filter(User.username == username).first()
+        is_logged_in = user is not None
     return templates.TemplateResponse(
         "index.html",
         {"request": request, "clients": clients, "is_logged_in": is_logged_in}
@@ -162,15 +193,17 @@ async def logout(request: Request):
     request.session.clear()
     return RedirectResponse(url="/login", status_code=302)
 
-def require_login(request: Request):
-    if request.session.get("user") != config["username"]:
+def require_login(request: Request, db: Session = Depends(get_db)):
+    username = request.session.get("user")
+    if not username:
         return False
-    return True
+    user = db.query(User).filter(User.username == username).first()
+    return user is not None
 
 # 管理面板
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_panel(request: Request, db: Session = Depends(get_db)):
-    if not require_login(request):
+    if not require_login(request, db):
         return RedirectResponse(url="/login", status_code=302)
     clients = db.query(Client).all()
     return templates.TemplateResponse(
@@ -203,6 +236,10 @@ async def reset_password(
     user.username = new_username
     user.password = bcrypt.hash(new_password)
     db.commit()
+    
+    # 更新config中的用户名和密码
+    config["username"] = new_username
+    config["password"] = bcrypt.hash(new_password)
     
     # 重定向到登录页
     return RedirectResponse(url="/login", status_code=302) 
