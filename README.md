@@ -27,6 +27,12 @@ BUG巨多 不对外开放
 
 "60000,60001"分别代表web端口、通信端口，web登录账号与密码默认都是`admin`，可在登录页面更改。
 
+
+感觉上面有些乱啊，下面是一键安装代码，记得修改端口：
+
+>sudo apt-get update && sudo apt-get install git python3 python3-pip && git clone https://github.com/xmsssssss/smalltz.git && cd smalltz && pip3 install -r requirements.txt && nohup python3 start.py -p `60000,60001` &
+
+
 # 客户端
 
 下载client.py
@@ -38,8 +44,16 @@ BUG巨多 不对外开放
 
 "ip:60001,银河超算,5"分别代表服务端ip、服务端ip通信端口、客户端名、定时上传间隔
 
+感觉上面有些乱啊，下面是一键安装代码，记得修改ip、端口、名、间隔时间：
+
+>wget https://raw.githubusercontent.com/xmsssssss/smalltz/refs/heads/main/client.py && pip3 install websockets psutil && chmod +x client.py && nohup python3 client.py -p `ip:60001,银河超算,5` &
+
 
 ![image](https://github.com/user-attachments/assets/ea48f6d2-d042-4f9f-848f-08967551a890)
 
 ![image](https://github.com/user-attachments/assets/54a17062-ec4f-4450-bd20-51186729ffe5)
 
+# 补充
+1.生成的db文件，用于储存探针数据+账号密码，如果账号密码忘记直接删除db文件即可
+2.隐藏可以离线一直在连的客户端。
+3.删除就是删除，但是如果客户端一直连接，db文件会新建，还会有。
