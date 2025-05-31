@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 from web import Client, Base, SQLALCHEMY_DATABASE_URL
 import argparse
-
+from urllib.parse import unquote
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -15,7 +15,7 @@ async def handler(websocket, path):
     if not path.startswith('/ws/'):
         await websocket.close()
         return
-    client_id = path.split('/ws/')[-1]
+    client_id = unquote(path.split('/ws/')[-1])
     db = SessionLocal()
     try:
         # 查找或创建客户端
