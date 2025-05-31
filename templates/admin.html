@@ -173,7 +173,7 @@
                     <div class="client-title-row mb-2">
                         <h5 class="card-title">
                             <span class="status-indicator ${client.is_active ? 'status-online' : 'status-offline'}"></span>
-                            ${decodeURIComponent(client.name)}
+                            ${client.name}
                         </h5>
                         <div class="client-actions">
                             <button type="button" class="btn btn-toggle btn-sm btn-danger" onclick="deleteClient('${client.client_id}')">
