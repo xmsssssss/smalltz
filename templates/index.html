@@ -19,6 +19,7 @@
             width: 100%;
             padding-left: 0;
             padding-right: 0;
+            margin-top: 0 !important;
         }
         .top-bar {
             display: flex;
@@ -80,8 +81,8 @@
         }
         .stat-card {
             background: linear-gradient(120deg, #23242a 60%, #6ec1e4 100%);
-            border-radius: 20px;
-            padding: 28px 38px;
+            border-radius: 10px;
+            padding: 20px 38px;
             min-width: 220px;
             box-shadow: 0 4px 24px 0 #6ec1e422;
             display: flex;
@@ -99,7 +100,7 @@
             margin-bottom: 8px;
         }
         .stat-value {
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: bold;
             margin-top: 4px;
             color: #fff;
@@ -127,9 +128,9 @@
             margin-bottom: 32px;
             max-width: 1200px;
             background: rgba(30, 30, 32, 0.82);
-            border-radius: 28px;
+            border-radius: 10px;
             box-shadow: 0 8px 48px 0 #6ec1e422;
-            padding: 0 0 0 0;
+            padding: 10px 10px;
             /* min-height: 320px; */
             width: 94%;
             backdrop-filter: blur(6px);
@@ -139,7 +140,7 @@
             flex-direction: column;
             align-items: flex-start;
             justify-content: flex-start;
-            padding: 22px 38px;
+            padding: 5px 15px;
             border-bottom: 1px solid #2d3a4b;
             transition: background 0.18s;
             min-height: 0;
@@ -187,7 +188,7 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
-            gap: 10px 32px;
+            gap: 8px 30px;
             margin: 0;
             padding: 0;
         }
@@ -249,8 +250,6 @@
         @media (max-width: 1400px) {
             #clients-container {
                 max-width: 98vw;
-                padding-left: 8px;
-                padding-right: 8px;
             }
         }
         @media (max-width: 900px) {
@@ -264,6 +263,10 @@
             #clients-container { border-radius: 8px; padding-left: 2px; padding-right: 2px; }
             .top-bar { flex-direction: column; gap: 8px; padding: 12px 0 8px 0; }
             .logo { font-size: 1.3rem; }
+        }
+        /* 覆盖 Bootstrap 的 mt-2 类 */
+        .mt-2 {
+            margin-top: 0 !important;
         }
     </style>
 </head>
@@ -352,7 +355,7 @@
             if(isOnline) online++; else offline++;
             const sys = status.system || {};
             const net = status.network || {};
-            const clientName = decodeURIComponent(client.client_id);
+            const clientName = client.client_id;
             html += `<div class="client-list-row${isOnline?'':' offline'}">
                 <div class="client-main">
                     <span class="client-status-dot ${isOnline?'online':'offline'}"></span>
