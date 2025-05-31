@@ -5,11 +5,41 @@ import signal
 import time
 import json
 import argparse
+from sqlalchemy import create_engine, Column, Integer, String
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+from passlib.hash import bcrypt
+import psutil
+
+# 数据库配置
+SQLALCHEMY_DATABASE_URL = "sqlite:///./probe.db"
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
 def parse_args():
     parser = argparse.ArgumentParser(description='探针服务启动脚本')
-    parser.add_argument('-p', '--params', type=str, help='配置参数，格式：web端口,ws端口,用户名,密码')
+    parser.add_argument('-p', '--params', type=str, help='配置参数，格式：web端口,ws端口')
     return parser.parse_args()
+
+def get_db_credentials():
+    try:
+        if os.path.exists("probe.db"):
+            db = SessionLocal()
+            user = db.query(User).first()
+            db.close()
+            if user:
+                return {"username": user.username, "password": user.password}
+    except Exception as e:
+        print(f"读取数据库失败: {e}")
+    return {"username": "admin", "password": bcrypt.hash("admin")}
+
+# 数据模型
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    password = Column(String)  # 存储加密后的密码
 
 def get_user_input():
     print("\n=== 探针服务配置 ===")
@@ -43,29 +73,22 @@ def get_user_input():
         except ValueError:
             print("请输入有效的端口号")
     
-    # 获取管理员用户名
-    username = input("请输入管理员用户名 (默认admin): ").strip()
-    if not username:
-        username = "admin"
-    
-    # 获取管理员密码
-    password = input("请输入管理员密码 (默认admin): ").strip()
-    if not password:
-        password = "admin"
+    # 从数据库获取用户名和密码
+    credentials = get_db_credentials()
     
     return {
         "web_port": web_port,
         "ws_port": ws_port,
-        "username": username,
-        "password": password
+        "username": credentials["username"],
+        "password": credentials["password"]
     }
 
 def parse_params(params_str):
     try:
         # 分割参数字符串
         params = params_str.split(',')
-        if len(params) != 4:
-            print("错误：参数数量不正确，需要4个参数：web端口,ws端口,用户名,密码")
+        if len(params) != 2:
+            print("错误：参数数量不正确，需要2个参数：web端口,ws端口")
             sys.exit(1)
         
         # 解析端口号
@@ -80,11 +103,14 @@ def parse_params(params_str):
             print("错误：Web端口和WebSocket端口不能相同")
             sys.exit(1)
         
+        # 从数据库获取用户名和密码
+        credentials = get_db_credentials()
+        
         return {
             "web_port": web_port,
             "ws_port": ws_port,
-            "username": params[2],
-            "password": params[3]
+            "username": credentials["username"],
+            "password": credentials["password"]
         }
     except ValueError:
         print("错误：端口号必须是数字")
@@ -94,28 +120,84 @@ def parse_params(params_str):
         sys.exit(1)
 
 def cleanup_processes(main_process, ws_process, config_file):
-    # 停止所有进程
-    if main_process and main_process.poll() is None:
-        main_process.terminate()
-    if ws_process and ws_process.poll() is None:
-        ws_process.terminate()
-    # 等待进程结束
-    if main_process:
-        try:
-            main_process.wait(timeout=5)
-        except Exception:
-            pass
-    if ws_process:
-        try:
-            ws_process.wait(timeout=5)
-        except Exception:
-            pass
-    # 删除临时配置文件
     try:
-        os.remove(config_file)
-    except:
-        pass
-    print("所有服务已停止")
+        # 获取所有子进程
+        def get_child_processes(pid):
+            children = []
+            try:
+                parent = psutil.Process(pid)
+                children = parent.children(recursive=True)
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+            return children
+
+        # 终止主进程及其子进程
+        if main_process:
+            main_pid = main_process.pid
+            for child in get_child_processes(main_pid):
+                try:
+                    child.terminate()
+                except:
+                    pass
+            try:
+                main_process.terminate()
+            except:
+                pass
+
+        # 终止WebSocket进程及其子进程
+        if ws_process:
+            ws_pid = ws_process.pid
+            for child in get_child_processes(ws_pid):
+                try:
+                    child.terminate()
+                except:
+                    pass
+            try:
+                ws_process.terminate()
+            except:
+                pass
+
+        # 等待进程结束
+        if main_process:
+            try:
+                main_process.wait(timeout=5)
+            except:
+                try:
+                    os.kill(main_pid, signal.SIGKILL)
+                except:
+                    pass
+
+        if ws_process:
+            try:
+                ws_process.wait(timeout=5)
+            except:
+                try:
+                    os.kill(ws_pid, signal.SIGKILL)
+                except:
+                    pass
+
+        # 删除临时配置文件
+        try:
+            os.remove(config_file)
+        except:
+            pass
+
+        # 检查端口占用
+        def check_port(port):
+            for conn in psutil.net_connections():
+                if conn.laddr.port == port:
+                    try:
+                        psutil.Process(conn.pid).terminate()
+                    except:
+                        pass
+
+        # 检查并清理可能被占用的端口
+        check_port(config['web_port'])
+        check_port(config['ws_port'])
+
+        print("所有服务已停止")
+    except Exception as e:
+        print(f"清理进程时发生错误: {e}")
 
 def run_services():
     args = parse_args()
@@ -128,6 +210,35 @@ def run_services():
     with open(config_file, "w", encoding="utf-8") as f:
         json.dump(config, f, ensure_ascii=False, indent=2)
     current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # 检查端口是否被占用
+    def is_port_in_use(port):
+        for conn in psutil.net_connections():
+            if conn.laddr.port == port:
+                return True
+        return False
+
+    # 如果端口被占用，先尝试终止占用进程
+    if is_port_in_use(config['web_port']):
+        print(f"端口 {config['web_port']} 已被占用，尝试释放...")
+        for conn in psutil.net_connections():
+            if conn.laddr.port == config['web_port']:
+                try:
+                    psutil.Process(conn.pid).terminate()
+                except:
+                    pass
+        time.sleep(1)  # 等待端口释放
+
+    if is_port_in_use(config['ws_port']):
+        print(f"端口 {config['ws_port']} 已被占用，尝试释放...")
+        for conn in psutil.net_connections():
+            if conn.laddr.port == config['ws_port']:
+                try:
+                    psutil.Process(conn.pid).terminate()
+                except:
+                    pass
+        time.sleep(1)  # 等待端口释放
+
     main_process = subprocess.Popen([sys.executable, 'web.py', '--config', config_file],
                                   cwd=current_dir,
                                   stdout=subprocess.PIPE,
@@ -142,7 +253,7 @@ def run_services():
     print(f"- Web服务运行在 http://localhost:{config['web_port']}")
     print(f"- WebSocket服务运行在 ws://localhost:{config['ws_port']}")
     print(f"- 管理员账号: {config['username']}")
-    print(f"- 管理员密码: {config['password']}")
+    print(f"- 管理员密码(加密): {config['password']}")
     print("\n按 Ctrl+C 停止所有服务...")
     try:
         while True:
