@@ -119,7 +119,7 @@ def parse_params(params_str):
         print(f"错误：参数解析失败 - {str(e)}")
         sys.exit(1)
 
-def cleanup_processes(main_process, ws_process, config_file):
+def cleanup_processes(main_process, ws_process, config_file, config):
     try:
         # 获取所有子进程
         def get_child_processes(pid):
@@ -276,15 +276,15 @@ def run_services():
                     if err:
                         print("[WebSocket Error]", err)
                 print("服务异常退出，正在关闭所有子进程...")
-                cleanup_processes(main_process, ws_process, config_file)
+                cleanup_processes(main_process, ws_process, config_file, config)
                 break
             time.sleep(0.1)
     except KeyboardInterrupt:
         print("\n正在停止服务...")
-        cleanup_processes(main_process, ws_process, config_file)
+        cleanup_processes(main_process, ws_process, config_file, config)
     except Exception as e:
         print(f"主程序异常: {e}")
-        cleanup_processes(main_process, ws_process, config_file)
+        cleanup_processes(main_process, ws_process, config_file, config)
 
 if __name__ == "__main__":
     run_services() 
