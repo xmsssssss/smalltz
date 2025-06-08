@@ -9,7 +9,11 @@ import argparse
 import os
 import socket
 import sys
+import requests
 
+# 存储上一次的网络数据
+last_net_io = None
+last_net_time = None
 
 def get_main_disk():
     sys = platform.system()
@@ -36,18 +40,49 @@ def get_ip_mac():
         pass
     return ip, mac
 
+def get_ip_region():
+    try:
+        response = requests.get('http://ip-api.com/json/?fields=countryCode,country', timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            return data.get('countryCode', ''), data.get('country', '')
+    except:
+        pass
+    return '', ''
+
 def get_status():
+    global last_net_io, last_net_time
     disk = get_main_disk()
     net = psutil.net_io_counters()
     ip, mac = get_ip_mac()
+    memory = psutil.virtual_memory()
+    disk_usage = psutil.disk_usage(disk) if os.path.exists(disk) else None
+    
+    # 计算网络速度
+    current_time = time.time()
+    upload_speed = 0
+    download_speed = 0
+    
+    if last_net_io is not None and last_net_time is not None:
+        time_diff = current_time - last_net_time
+        if time_diff > 0:
+            upload_speed = (net.bytes_sent - last_net_io.bytes_sent) / time_diff
+            download_speed = (net.bytes_recv - last_net_io.bytes_recv) / time_diff
+    
+    # 更新上一次的数据
+    last_net_io = net
+    last_net_time = current_time
+    
     return {
         "system": {
             "platform": platform.platform(),
             "os": platform.system(),
             "hostname": platform.node(),
             "cpu_percent": psutil.cpu_percent(),
-            "memory_percent": psutil.virtual_memory().percent,
-            "disk_usage": psutil.disk_usage(disk).percent if os.path.exists(disk) else None,
+            "memory_percent": memory.percent,
+            "memory_total": f"{memory.total / (1024**3):.2f}GiB",
+            "disk_usage": disk_usage.percent if disk_usage else None,
+            "disk_total": f"{disk_usage.total / (1024**3):.0f}GiB" if disk_usage else None,
             "boot_time": psutil.boot_time(),
             "ip": ip,
             "mac": mac,
@@ -55,17 +90,26 @@ def get_status():
         "network": {
             "bytes_sent": net.bytes_sent,
             "bytes_recv": net.bytes_recv,
+            "upload_speed": f"{upload_speed:.2f}",
+            "download_speed": f"{download_speed:.2f}"
         },
         "timestamp": time.time()
     }
 
 async def send_status(uri, client_id, interval):
+    # 获取IP地区信息
+    country_code, country_name = get_ip_region()
+    print(f"[INFO] 服务器地区: {country_name} ({country_code})")
+    
     while True:
         try:
             async with websockets.connect(f"{uri}/ws/{client_id}") as websocket:
                 print(f"[INFO] 已连接到 {uri}/ws/{client_id}")
                 while True:
                     status = get_status()
+                    # 添加地区信息
+                    status["system"]["country_code"] = country_code
+                    status["system"]["country_name"] = country_name
                     await websocket.send(json.dumps(status))
                     print(f"[SEND] {status}")
                     await asyncio.sleep(interval)
@@ -80,14 +124,14 @@ def main():
         '-p', '--params',
         type=str,
         required=True,
-        help='客户端配置参数，格式：服务器地址:端口,客户端ID[,间隔(秒)]'
+        help='客户端配置参数，格式：服务器地址:端口,客户端名称[,间隔(秒)]'
     )
     args = parser.parse_args()
     try:
         # 解析参数字符串
         params = args.params.split(',')
         if len(params) < 2:
-            print("错误：参数不足，至少需要：服务器地址:端口,客户端ID")
+            print("错误：参数不足，至少需要：服务器地址:端口,客户端名称")
             sys.exit(1)
         server_address = params[0].strip()
         client_id = params[1].strip()
