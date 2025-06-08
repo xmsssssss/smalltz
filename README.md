@@ -49,7 +49,7 @@ BUG巨多 不对外开放
 >wget https://raw.githubusercontent.com/xmsssssss/smalltz/refs/heads/main/client.py && pip3 install websockets psutil && chmod +x client.py && nohup python3 client.py -p `ip:60001,银河超算,5` &
 
 
-![image](https://github.com/user-attachments/assets/ea48f6d2-d042-4f9f-848f-08967551a890)
+![image](https://github.com/user-attachments/assets/7fa08ef8-056f-4918-a411-f6220b64c725)
 
 ![image](https://github.com/user-attachments/assets/54a17062-ec4f-4450-bd20-51186729ffe5)
 
@@ -59,3 +59,8 @@ BUG巨多 不对外开放
 2.隐藏可以离线一直在连的客户端。
 
 3.删除就是删除，但是如果客户端一直连接，db文件会新建，还会有。
+
+4.更新client.py
+>kill -9 $(ps -ef | grep "python3 client.py" | grep -v grep | awk '{print $2}')
+>
+>rm -f client.py && wget https://raw.githubusercontent.com/xmsssssss/smalltz/refs/heads/main/client.py
