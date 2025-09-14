@@ -32,7 +32,7 @@ jobs:
         id: meta  # 步骤ID，用于后续引用输出
         uses: docker/metadata-action@v5  # 自动生成标签和元数据
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/docker-test  # 目标镜像名称（格式：用户名/仓库名）
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/xmtx-s  # 目标镜像名称（格式：用户名/仓库名）
           flavor: |
             latest=false  # 禁用metadata-action默认的latest标签生成逻辑
           tags: |  # 自定义标签规则（注意缩进）
