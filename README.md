@@ -19,12 +19,12 @@ BUG巨多 不对外开放
 ---
 
 # 服务端
-现在提供docker安装：
+##现在提供docker安装：
 >docker pull xiaomustudent/xmtx-s:1.0.0
 >docker run -d -p 60000:60000 --name xmtz-s -v /root/xmtz/probe.db:/app/probe.db xiaomustudent/xmtx-s:1.0.0
 
 
-打包下载，同目录直接执行以下代码：
+##打包下载安装，同目录直接执行以下代码：
 >pip3 install -r requirements.txt
 
 >nohup python3 start.py -p 60000,60001
