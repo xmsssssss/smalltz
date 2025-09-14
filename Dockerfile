@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 60000
 
-CMD ["python", "start.py"] 
+CMD ["python", "start.py", "-p", "60000,60001"] 
