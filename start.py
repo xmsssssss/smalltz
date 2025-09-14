@@ -13,7 +13,10 @@ import psutil
 
 # 数据库配置
 SQLALCHEMY_DATABASE_URL = "sqlite:///./probe.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    connect_args={"check_same_thread": False}
+)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
@@ -240,15 +243,9 @@ def run_services():
         time.sleep(1)  # 等待端口释放
 
     main_process = subprocess.Popen([sys.executable, 'web.py', '--config', config_file],
-                                  cwd=current_dir,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE,
-                                  text=True)
+                                cwd=current_dir)
     ws_process = subprocess.Popen([sys.executable, 'ws_server.py', '--port', str(config['ws_port'])],
-                                cwd=current_dir,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                text=True)
+                              cwd=current_dir)
     print("\n服务已启动:")
     print(f"- Web服务运行在 http://localhost:{config['web_port']}")
     print(f"- WebSocket服务运行在 ws://localhost:{config['ws_port']}")
@@ -257,24 +254,12 @@ def run_services():
     print("\n按 Ctrl+C 停止所有服务...")
     try:
         while True:
-            main_output = main_process.stdout.readline()
-            if main_output:
-                print(f"[Web] {main_output.strip()}")
-            ws_output = ws_process.stdout.readline()
-            if ws_output:
-                print(f"[WebSocket] {ws_output.strip()}")
-            # 检查进程是否还在运行
+            # 只检查进程是否还在运行，不再读取输出
             if main_process.poll() is not None or ws_process.poll() is not None:
                 if main_process.poll() is not None:
                     print("Web(FastAPI) 服务异常退出！")
-                    err = main_process.stderr.read()
-                    if err:
-                        print("[Web Error]", err)
                 if ws_process.poll() is not None:
                     print("WebSocket 服务异常退出！")
-                    err = ws_process.stderr.read()
-                    if err:
-                        print("[WebSocket Error]", err)
                 print("服务异常退出，正在关闭所有子进程...")
                 cleanup_processes(main_process, ws_process, config_file, config)
                 break

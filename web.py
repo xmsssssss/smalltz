@@ -18,11 +18,7 @@ from passlib.hash import bcrypt
 SQLALCHEMY_DATABASE_URL = "sqlite:///./probe.db"
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    pool_size=20,
-    max_overflow=10,
-    pool_timeout=30,
-    pool_recycle=1800
+    connect_args={"check_same_thread": False}
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
@@ -85,7 +81,7 @@ if __name__ == "__main__":
             exit(1)
     # 初始化账号（使用默认的admin/admin）
     init_admin_user()
-    uvicorn.run("web:app", host="0.0.0.0", port=config["web_port"], reload=True)
+    uvicorn.run("web:app", host="0.0.0.0", port=config["web_port"])
 else:
     # 被import时只用默认config，不做参数解析
     pass
@@ -122,10 +118,14 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
             try:
                 client = db.query(Client).filter(Client.client_id == client_id).first()
                 if client:
-                    client.status = data
-                    client.last_seen = datetime.utcnow()
-                    db.commit()
-                print(f"收到客户端 {client_id} 状态: {data}")
+                    # 只有活跃的客户端才更新状态
+                    if client.is_active:
+                        client.status = data
+                        client.last_seen = datetime.utcnow()
+                        db.commit()
+                    print(f"收到客户端 {client_id} 状态: {data}")
+                else:
+                    print(f"收到未知客户端 {client_id} 状态: {data}，未找到对应记录")
             except Exception as e:
                 print(f"更新客户端状态失败: {e}")
                 db.rollback()
@@ -140,7 +140,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request, db: Session = Depends(get_db)):
-    clients = db.query(Client).filter(Client.is_active == True).all()
+    clients = db.query(Client).all() # 返回所有客户端，以便前端能够显示隐藏的客户端
     username = request.session.get("user")
     is_logged_in = False
     if username:
@@ -153,8 +153,24 @@ async def root(request: Request, db: Session = Depends(get_db)):
 
 @app.get("/api/clients")
 async def get_clients(db: Session = Depends(get_db)):
-    clients = db.query(Client).all()
-    return clients
+    clients_from_db = db.query(Client).all()
+    # 为前端准备数据：对于非活跃客户端，清空其status字段以停止前端显示实时数据
+    clients_for_frontend = []
+    for client in clients_from_db:
+        if not client.is_active:
+            # 创建一个客户端的副本，修改其status字段，避免影响数据库中原始对象
+            client_data = client.__dict__.copy()
+            if "_sa_instance_state" in client_data: # 移除SQLAlchemy内部状态对象
+                del client_data["_sa_instance_state"]
+            client_data["status"] = "{}" # 将status设为空JSON字符串
+            clients_for_frontend.append(client_data)
+        else:
+            # 活跃客户端直接使用原始数据
+            client_data = client.__dict__.copy()
+            if "_sa_instance_state" in client_data: # 移除SQLAlchemy内部状态对象
+                del client_data["_sa_instance_state"]
+            clients_for_frontend.append(client_data)
+    return clients_for_frontend
 
 @app.post("/api/clients/{client_id}/toggle")
 async def toggle_client(client_id: str, db: Session = Depends(get_db)):

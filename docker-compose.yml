@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - xmtz-data:/app/probe.db
+    restart: always
+
+volumes:
+  xmtz-data: 

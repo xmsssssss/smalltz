@@ -320,6 +320,8 @@
             display: flex;
             align-items: center;
             transition: all 0.3s;
+            position: relative;
+            padding-bottom: 5px; /* 预留进度条空间 */
         }
 
         .info-item:hover {
@@ -346,6 +348,25 @@
             color: var(--text-secondary-dark);
             font-size: 0.85rem;
             margin-left: 4px;
+        }
+
+        .info-bar {
+            position: absolute;
+            left: 8px;
+            right: 8px;
+            bottom: 1.5px;
+            width: auto;
+            height: 1.5px;
+            background: rgba(110,193,228,0.10);
+            border-radius: 2px;
+            margin-top: 0;
+            overflow: hidden;
+        }
+        .info-bar-inner {
+            height: 100%;
+            border-radius: 2px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+            transition: width 0.4s cubic-bezier(.4,2,.6,1);
         }
 
         /* Light theme */
@@ -458,6 +479,25 @@
                 margin-right: auto;
             }
         }
+
+        .client-list-row.offline {
+            background: rgba(231, 76, 60, 0.08); /* 离线为淡红色 */
+            filter: grayscale(0.3);
+            opacity: 0.7;
+        }
+        .client-list-row.offline,
+        .client-list-row.offline .info-value,
+        .client-list-row.offline .client-id {
+            color: #aaa !important;
+        }
+        .client-list-row.offline::before {
+            background: linear-gradient(180deg, #e74c3c, #c0392b); /* 红色渐变 */
+            opacity: 0.7;
+        }
+        .client-list-row:not(.offline)::before {
+            background: linear-gradient(180deg, var(--primary-color), var(--primary-dark));
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
@@ -533,9 +573,36 @@
 
     // 渲染客户端卡片和统计
     function renderClients(clients) {
-        const now = Date.now()/1000;
+        // 在线优先，client_id升序
+        const now = Date.now() / 1000;
+        clients.sort((a, b) => {
+            let statusA = {}, statusB = {};
+            let validA = false, validB = false;
+            try { statusA = JSON.parse(a.status); validA = statusA && typeof statusA === 'object' && statusA.system; } catch {}
+            try { statusB = JSON.parse(b.status); validB = statusB && typeof statusB === 'object' && statusB.system; } catch {}
+            let lastSeenA = 0, lastSeenB = 0;
+            try { let ls = a.last_seen.split('.')[0]; if (ls.length === 19) ls += 'Z'; lastSeenA = Date.parse(ls)/1000; } catch {}
+            try { let ls = b.last_seen.split('.')[0]; if (ls.length === 19) ls += 'Z'; lastSeenB = Date.parse(ls)/1000; } catch {}
+            const onlineA = a.is_active && validA && (now - lastSeenA < 30);
+            const onlineB = b.is_active && validB && (now - lastSeenB < 30);
+            if (onlineA !== onlineB) return onlineA ? -1 : 1;
+            return (a.client_id || '').localeCompare(b.client_id || '');
+        });
         let online = 0, offline = 0;
-        let html = '';
+        const container = document.getElementById('clients-container');
+
+        // Store the existing DOM nodes to be reused
+        const existingNodes = new Map();
+        Array.from(container.children).forEach(node => {
+            if (node.id.startsWith('client-row-')) {
+                const clientId = node.id.replace('client-row-', '');
+                existingNodes.set(clientId, node);
+            }
+        });
+
+        // Create a new ordered list of DOM nodes
+        const newOrderedNodes = [];
+
         clients.forEach(client => {
             let status = {};
             let validStatus = false;
@@ -543,7 +610,6 @@
                 status = JSON.parse(client.status);
                 validStatus = status && typeof status === 'object' && status.system;
             } catch(e){ validStatus = false; }
-            // 修正last_seen解析
             let lastSeen = 0;
             try {
                 let ls = client.last_seen.split('.')[0];
@@ -551,39 +617,130 @@
                 lastSeen = Date.parse(ls)/1000;
             } catch(e) { lastSeen = 0; }
             const isOnline = client.is_active && validStatus && (now - lastSeen < 30);
-            if(isOnline) online++; else offline++;
+            
             const sys = status.system || {};
             const net = status.network || {};
             const clientName = client.client_id;
             const countryCode = sys.country_code || '';
             const flagUrl = countryCode ? `https://flagcdn.com/w20/${countryCode.toLowerCase()}.png` : '';
-            
-            html += `<div class="client-list-row${isOnline?'':' offline'}">
-                <div class="client-main">
-                    <span class="client-status-dot ${isOnline?'online':'offline'}"></span>
-                    <span class="client-id">
-                        ${flagUrl ? `<img src="${flagUrl}" class="flag-icon" alt="${sys.country_name || ''}" title="${sys.country_name || ''}">` : ''}
-                        ${clientName}
-                    </span>
-                </div>
-                <ul class="client-info-list">
-                    <li class="info-item"><i class="bi bi-pc"></i><span class="info-label">系统</span><span class="info-value">${sys.os||'-'}</span></li>
-                    <li class="info-item"><i class="bi bi-cpu"></i><span class="info-label">CPU</span><span class="info-value">${fmtPercent(sys.cpu_percent)}</span></li>
-                    <li class="info-item"><i class="bi bi-memory"></i><span class="info-label">内存</span><span class="info-value">${fmtPercent(sys.memory_percent)}<span class='hide-on-small'>&nbsp;(${sys.memory_total})</span></span></li>
-                    <li class="info-item"><i class="bi bi-hdd"></i><span class="info-label">硬盘</span><span class="info-value">${fmtPercent(sys.disk_usage)}<span class='hide-on-small'>&nbsp;(${sys.disk_total})</span></span></li>
-                    <li class="info-item"><i class="bi bi-clock-history"></i><span class="info-label">时长</span><span class="info-value">${fmtUptime(sys.boot_time)}</span></li>
-                    <li class="info-item"><i class="bi bi-arrow-up-circle"></i><span class="info-label">UP</span><span class="info-value">${fmtMB(net.upload_speed)}</span><span class="info-unit">MiB/s</span></li>
-                    <li class="info-item"><i class="bi bi-arrow-down-circle"></i><span class="info-label">DOWN</span><span class="info-value">${fmtMB(net.download_speed)}</span><span class="info-unit">MiB/s</span></li>
-                    <li class="info-item"><i class="bi bi-arrow-up-right-circle"></i><span class="info-label">已发</span><span class="info-value">${fmtGB(net.bytes_sent)}</span><span class="info-unit">GiB</span></li>
-                    <li class="info-item"><i class="bi bi-arrow-down-left-circle"></i><span class="info-label">已收</span><span class="info-value">${fmtGB(net.bytes_recv)}</span><span class="info-unit">GiB</span></li>
-                </ul>
-            </div>`;
+
+            const clientRowId = `client-row-${clientName}`;
+            let clientRow = existingNodes.get(clientName);
+
+            if (clientRow) {
+                // 客户端已存在，执行更新操作
+                // 更新状态点
+                const statusDot = clientRow.querySelector('.client-status-dot');
+                if (statusDot) {
+                    statusDot.classList.toggle('online', isOnline);
+                    statusDot.classList.toggle('offline', !isOnline);
+                }
+
+                // 更新flag-icon (只有当src变化时才更新)
+                const flagImg = clientRow.querySelector('.flag-icon');
+                if (flagImg && flagUrl && !flagImg.src.includes(flagUrl)) {
+                    flagImg.src = flagUrl;
+                } else if (!flagUrl && flagImg) {
+                    flagImg.remove(); // 如果没有flagUrl，则移除图片
+                }
+
+                // 如果客户端是活跃的，才更新数据
+                if (client.is_active) {
+                    // 更新信息列表
+                    const infoList = clientRow.querySelector('.client-info-list');
+                    if (infoList) {
+                        // 仅更新关键动态数据，避免innerHTML重新渲染整个列表
+                        infoList.querySelector('[data-info="os"] .info-value').innerText = sys.os||'-';
+                        infoList.querySelector('[data-info="cpu"] .info-value').innerText = fmtPercent(sys.cpu_percent);
+                        infoList.querySelector('[data-info="memory"] .info-value').innerHTML = `${fmtPercent(sys.memory_percent)}<span class='hide-on-small'>&nbsp;(${sys.memory_total})</span>`;
+                        infoList.querySelector('[data-info="disk"] .info-value').innerHTML = `${fmtPercent(sys.disk_usage)}<span class='hide-on-small'>&nbsp;(${sys.disk_total})</span>`;
+                        infoList.querySelector('[data-info="uptime"] .info-value').innerText = fmtUptime(sys.boot_time);
+                        infoList.querySelector('[data-info="upload_speed"] .info-value').innerText = fmtMB(net.upload_speed);
+                        infoList.querySelector('[data-info="download_speed"] .info-value').innerText = fmtMB(net.download_speed);
+                        infoList.querySelector('[data-info="bytes_sent"] .info-value').innerText = fmtGB(net.bytes_sent);
+                        infoList.querySelector('[data-info="bytes_recv"] .info-value').innerText = fmtGB(net.bytes_recv);
+
+                        // 更新进度条
+                        infoList.querySelector('[data-info="cpu"] .info-bar-inner').style.width = `${sys.cpu_percent||0}%`;
+                        infoList.querySelector('[data-info="memory"] .info-bar-inner').style.width = `${sys.memory_percent||0}%`;
+                        infoList.querySelector('[data-info="disk"] .info-bar-inner').style.width = `${sys.disk_usage||0}%`;
+                    }
+                } // End if (client.is_active)
+
+                // 如果客户端状态改变，更新class
+                clientRow.classList.toggle('offline', !isOnline);
+
+            } else {
+                // Client does not exist, create new card
+                let cardHtml = `<div class="client-list-row${isOnline?'':' offline'}" id="${clientRowId}">
+                    <div class="client-main">
+                        <span class="client-status-dot ${isOnline?'online':'offline'}"></span>
+                        <span class="client-id">
+                            ${flagUrl ? `<img src="${flagUrl}" class="flag-icon" alt="${sys.country_name || ''}" title="${sys.country_name || ''}">` : ''}
+                            ${clientName}
+                        </span>
+                    </div>
+                    <ul class="client-info-list">
+                        <li class="info-item" data-info="os"><i class="bi bi-pc"></i><span class="info-label">OS</span><span class="info-value">${sys.os||'-'}</span><div class="info-bar"><div class="info-bar-inner" style="width:0%;background:transparent;"></div></div></li>
+                        <li class="info-item" data-info="cpu">
+                            <i class="bi bi-cpu"></i>
+                            <span class="info-label">CPU</span>
+                            <span class="info-value">${fmtPercent(sys.cpu_percent)}</span>
+                            <div class="info-bar"><div class="info-bar-inner" style="width:${sys.cpu_percent||0}%;"></div></div>
+                        </li>
+                        <li class="info-item" data-info="memory">
+                            <i class="bi bi-memory"></i>
+                            <span class="info-label">内存</span>
+                            <span class="info-value">${fmtPercent(sys.memory_percent)}<span class='hide-on-small'>&nbsp;(${sys.memory_total})</span></span>
+                            <div class="info-bar"><div class="info-bar-inner" style="width:${sys.memory_percent||0}%;"></div></div>
+                        </li>
+                        <li class="info-item" data-info="disk">
+                            <i class="bi bi-hdd"></i>
+                            <span class="info-label">硬盘</span>
+                            <span class="info-value">${fmtPercent(sys.disk_usage)}<span class='hide-on-small'>&nbsp;(${sys.disk_total})</span></span>
+                            <div class="info-bar"><div class="info-bar-inner" style="width:${sys.disk_usage||0}%;"></div></div>
+                        </li>
+                        <li class="info-item" data-info="uptime"><i class="bi bi-clock-history"></i><span class="info-label">时长</span><span class="info-value">${fmtUptime(sys.boot_time)}</span><div class="info-bar"><div class="info-bar-inner" style="width:0%;background:transparent;"></div></div></li>
+                        <li class="info-item" data-info="upload_speed"><i class="bi bi-arrow-up-circle"></i><span class="info-label">UP</span><span class="info-value">${fmtMB(net.upload_speed)}</span><span class="info-unit">MiB/s</span><div class="info-bar"><div class="info-bar-inner" style="width:0%;background:transparent;"></div></div></li>
+                        <li class="info-item" data-info="download_speed"><i class="bi bi-arrow-down-circle"></i><span class="info-label">DOWN</span><span class="info-value">${fmtMB(net.download_speed)}</span><span class="info-unit">MiB/s</span><div class="info-bar"><div class="info-bar-inner" style="width:0%;background:transparent;"></div></div></li>
+                        <li class="info-item" data-info="bytes_sent"><i class="bi bi-arrow-up-right-circle"></i><span class="info-label">已发</span><span class="info-value">${fmtGB(net.bytes_sent)}</span><span class="info-unit">GiB</span><div class="info-bar"><div class="info-bar-inner" style="width:0%;background:transparent;"></div></div></li>
+                        <li class="info-item" data-info="bytes_recv"><i class="bi bi-arrow-down-left-circle"></i><span class="info-label">已收</span><span class="info-value">${fmtGB(net.bytes_recv)}</span><span class="info-unit">GiB</span><div class="info-bar"><div class="info-bar-inner" style="width:0%;background:transparent;"></div></div></li>
+                    </ul>
+                </div>`;
+                clientRow = document.createElement('div'); // Create a new div to hold the card HTML
+                clientRow.innerHTML = cardHtml;
+                clientRow = clientRow.firstElementChild; // Get the actual card element
+                existingNodes.set(clientName, clientRow); // Add to existingNodes for potential future updates
+            }
+            newOrderedNodes.push(clientRow); // Add to the new ordered list
+            // Update online/offline count
+            if (isOnline) { online++; } else { offline++; }
         });
-        const container = document.getElementById('clients-container');
-        container.innerHTML = html;
+
+        // Remove client rows that are no longer in the fetched data
+        Array.from(container.children).forEach(row => {
+            const id = row.id.replace('client-row-', '');
+            if (!clients.some(c => c.client_id === id)) {
+                row.remove();
+            }
+        });
+
+        // Update statistics
         document.getElementById('stat-total').innerText = clients.length;
         document.getElementById('stat-online').innerText = online;
         document.getElementById('stat-offline').innerText = offline;
+
+        // Reorder existing DOM elements to match the sorted clients array
+        // This is a flicker-free way to reorder elements.
+        // It iterates through the desired order and ensures each element is in its correct place.
+        const fragment = document.createDocumentFragment();
+        newOrderedNodes.forEach(node => {
+            if (node) {
+                fragment.appendChild(node);
+            }
+        });
+        container.innerHTML = ''; // Clear existing content efficiently
+        container.appendChild(fragment); // Append once, no flicker
     }
 
     // 定时获取并渲染
