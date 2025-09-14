@@ -21,6 +21,7 @@ BUG巨多 不对外开放
 # 服务端
 ## 1.现在提供docker安装：
 >docker pull xiaomustudent/xmtx-s:1.0.0
+
 >docker run -d -p 60000:60000 --name xmtz-s -v /root/xmtz/probe.db:/app/probe.db xiaomustudent/xmtx-s:1.0.0
 
 
@@ -53,7 +54,7 @@ BUG巨多 不对外开放
 >wget https://raw.githubusercontent.com/xmsssssss/smalltz/refs/heads/main/client.py && pip3 install websockets psutil && chmod +x client.py && nohup python3 client.py -p `ip:60001,银河超算,5` &
 
 
-<img width="1820" height="755" alt="{97AE4A00-7025-4882-83C8-E4B155701F7A}" src="https://github.com/user-attachments/assets/a8cd1228-0427-48df-911a-44e8c93057ce" />
+<img width="1680" height="1130" alt="image" src="https://github.com/user-attachments/assets/8868690f-b7aa-4078-967f-353d633f1071" />
 
 
 ![image](https://github.com/user-attachments/assets/54a17062-ec4f-4450-bd20-51186729ffe5)
