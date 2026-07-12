@@ -6,64 +6,105 @@
     <title>探针状态监控</title>
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/bootstrap-icons.css">
-    <style id="theme-style">
+    <style>
         :root {
-            --primary-color: #6ec1e4;
-            --primary-dark: #2980b9;
-            --bg-dark: #1a1b1f;
-            --bg-card-dark: #23242a;
-            --text-primary-dark: #ffffff;
-            --text-secondary-dark: #b8c6db;
-            --bg-light: #f5f7fa;
-            --bg-card-light: #ffffff;
-            --text-primary-light: #2c3e50;
-            --text-secondary-light: #34495e;
-            --transition-speed: 0.3s;
+            --primary: #6ee7ff;
+            --primary-strong: #38bdf8;
+            --green: #34d399;
+            --red: #fb7185;
+            --amber: #fbbf24;
+            --bg: #0c111d;
+            --panel: rgba(15, 23, 42, 0.82);
+            --panel-strong: rgba(15, 23, 42, 0.96);
+            --line: rgba(148, 163, 184, 0.18);
+            --text: #e5eefb;
+            --muted: #94a3b8;
+            --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         html, body {
             min-height: 100vh;
             margin: 0;
-            padding: 0;
+        }
+
+        body {
             font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-primary-dark);
-            transition: background-color var(--transition-speed), color var(--transition-speed);
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 34rem),
+                radial-gradient(circle at 85% 10%, rgba(52, 211, 153, 0.14), transparent 28rem),
+                linear-gradient(135deg, #08111f 0%, #0f172a 58%, #111827 100%);
+            transition: background-color 0.25s, color 0.25s;
         }
 
-        .container {
-            width: 100%;
-            padding: 0;
-            margin-top: 0 !important;
+        body.light {
+            --bg: #eef5fb;
+            --panel: rgba(255, 255, 255, 0.84);
+            --panel-strong: rgba(255, 255, 255, 0.96);
+            --line: rgba(15, 23, 42, 0.12);
+            --text: #0f172a;
+            --muted: #64748b;
+            --shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.25), transparent 34rem),
+                radial-gradient(circle at 85% 10%, rgba(52, 211, 153, 0.18), transparent 28rem),
+                linear-gradient(135deg, #f8fbff 0%, #edf6ff 55%, #eef2ff 100%);
         }
 
-        /* === Compact re-design === */
+        .page-shell {
+            width: min(1240px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 22px 0 34px;
+        }
+
         .top-bar {
-            background: rgba(35,36,42,0.9);
-            backdrop-filter: blur(6px);
-            padding: 12px 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 16px;
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            background: var(--panel);
+            backdrop-filter: blur(18px);
+            box-shadow: var(--shadow);
         }
 
-        .logo {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--primary-color);
+        .brand {
             display: flex;
             align-items: center;
-            gap: 8px;
-            text-shadow: 0 2px 8px rgba(110, 193, 228, 0.2);
+            gap: 14px;
+            min-width: 0;
         }
 
-        .logo i {
-            font-size: 1.6rem;
-            background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            border-radius: 16px;
+            color: #062334;
+            background: linear-gradient(135deg, var(--primary), var(--green));
+            box-shadow: 0 16px 36px rgba(56, 189, 248, 0.26);
+            font-size: 1.45rem;
+        }
+
+        .brand-title {
+            margin: 0;
+            font-size: clamp(1.35rem, 4vw, 2rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+        }
+
+        .brand-subtitle {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.9rem;
         }
 
         .top-actions {
@@ -72,465 +113,613 @@
             gap: 10px;
         }
 
-        .action-btn {
-            background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 6px 16px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            display: flex;
+        .action-btn,
+        .theme-btn {
+            border: 1px solid rgba(110, 231, 255, 0.25);
+            color: var(--text);
+            background: rgba(15, 23, 42, 0.48);
+            border-radius: 999px;
+            min-height: 42px;
+            padding: 0 16px;
+            font-weight: 700;
+            display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(110, 193, 228, 0.2);
+            transition: transform 0.18s, border-color 0.18s, background 0.18s;
         }
 
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(110, 193, 228, 0.3);
+        body.light .action-btn,
+        body.light .theme-btn {
+            background: rgba(255, 255, 255, 0.68);
         }
 
         .theme-btn {
-            background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 6px 16px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 15px rgba(110, 193, 228, 0.2);
-            width: auto;
-            height: auto;
-            justify-content: center;
+            width: 42px;
+            padding: 0;
         }
 
+        .action-btn:hover,
         .theme-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(110, 193, 228, 0.3);
+            transform: translateY(-1px);
+            border-color: rgba(110, 231, 255, 0.68);
+            background: rgba(56, 189, 248, 0.16);
         }
 
         .stat-bar {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin: 18px 0;
+        }
+
+        .group-tabs {
             display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            padding: 0 20px;
-            margin-bottom: 20px;
+            gap: 8px;
+            margin: 0 0 12px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .group-tab {
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 7px 13px;
+            color: var(--muted);
+            background: var(--panel);
+            white-space: nowrap;
+            font-size: 0.86rem;
+            font-weight: 800;
+        }
+
+        .group-tab.active {
+            color: #062334;
+            border-color: rgba(110, 231, 255, 0.48);
+            background: linear-gradient(135deg, var(--primary), var(--green));
         }
 
         .stat-card {
-            background: var(--bg-card-dark);
-            border-radius: 8px;
-            padding: 12px 16px;
-            min-width: 180px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex: 1;
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: var(--panel);
+            box-shadow: 0 14px 38px rgba(0, 0, 0, 0.14);
         }
 
-        .stat-card::before {
+        .stat-card::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(110, 193, 228, 0.15);
+            right: -24px;
+            top: -34px;
+            width: 92px;
+            height: 92px;
+            border-radius: 999px;
+            background: rgba(110, 231, 255, 0.12);
         }
 
         .stat-title {
-            font-size: 0.9rem;
-            color: var(--text-secondary-dark);
-            margin-bottom: 0;
+            position: relative;
+            z-index: 1;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 9px;
+            color: var(--muted);
+            font-size: 0.92rem;
         }
 
         .stat-value {
-            font-size: 1.4rem;
-            font-weight: 700;
-            background: linear-gradient(45deg, var(--primary-color), var(--primary-dark));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: baseline;
-            gap: 8px;
+            position: relative;
+            z-index: 1;
+            margin-top: 8px;
+            font-size: 2.15rem;
+            font-weight: 850;
+            line-height: 1;
+            letter-spacing: -0.05em;
         }
 
         .stat-value .unit {
-            font-size: 1.2rem;
-            color: var(--text-secondary-dark);
-            -webkit-text-fill-color: var(--text-secondary-dark);
+            margin-left: 4px;
+            color: var(--muted);
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0;
         }
 
         .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            position: relative;
+            width: 9px;
+            height: 9px;
+            border-radius: 999px;
+            box-shadow: 0 0 0 5px rgba(148, 163, 184, 0.11);
         }
 
-        .dot::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: inherit;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.5); opacity: 0; }
-            100% { transform: scale(1); opacity: 0.8; }
-        }
-
-        .dot-blue { background: var(--primary-color); }
-        .dot-green { background: #2ecc71; }
-        .dot-red { background: #e74c3c; }
+        .dot-green { background: var(--green); }
+        .dot-red { background: var(--red); }
+        .dot-blue { background: var(--primary-strong); }
 
         #clients-container {
-            margin: 0 auto;
-            padding: 10px 10px 2px 10px;
-            background: var(--bg-card-dark);
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-            width: calc(100% - 200px);
-            transition: background-color var(--transition-speed);
-        }
-
-        .client-list-row {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 5px;
-            background: rgba(255,255,255,0.02);
-            border-radius: 8px;
-            margin-bottom: 8px;
-            padding: 12px 16px 12px 20px;
-            position: relative;
-            transition: background 0.25s;
-        }
-        .client-list-row:hover {
-            background: rgba(110,193,228,0.06);
-        }
-
-        .client-list-row::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 4px;
-            bottom: 4px;
-            width: 3px;
-            background: linear-gradient(180deg, var(--primary-color), var(--primary-dark));
-            border-radius: 3px;
-            opacity: 0.5;
-        }
-
-        .client-main {
-            margin-bottom: 0;
+            display: grid;
             gap: 10px;
-            font-size: 0.95rem;
         }
 
-        .client-status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
+        .empty-state,
+        .error-state {
+            padding: 38px 18px;
+            text-align: center;
+            border: 1px dashed var(--line);
+            border-radius: 22px;
+            color: var(--muted);
+            background: var(--panel);
+        }
+
+        .error-state {
+            color: var(--red);
+        }
+
+        .client-card {
             position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: var(--panel-strong);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
         }
 
-        .client-status-dot.online {
-            background: #2ecc71;
-            box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
+        .detail-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: none;
+            place-items: center;
+            padding: 18px;
+            background: rgba(2, 6, 23, 0.72);
+            backdrop-filter: blur(10px);
         }
 
-        .client-status-dot.offline {
-            background: #e74c3c;
-            box-shadow: 0 0 10px rgba(231, 76, 60, 0.4);
+        .detail-modal.open {
+            display: grid;
         }
 
-        .client-status-dot::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: inherit;
-            animation: statusPulse 2s infinite;
+        .detail-card {
+            width: min(900px, 100%);
+            max-height: min(760px, calc(100vh - 36px));
+            overflow: auto;
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            background: var(--panel-strong);
+            box-shadow: var(--shadow);
         }
 
-        @keyframes statusPulse {
-            0% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(2); opacity: 0; }
-            100% { transform: scale(1); opacity: 0.8; }
-        }
-
-        .client-id {
-            font-size: 1.2rem;
-            color: var(--text-primary-dark);
-            font-weight: 600;
+        .detail-head {
             display: flex;
+            justify-content: space-between;
             align-items: center;
             gap: 12px;
+            padding: 18px;
+            border-bottom: 1px solid var(--line);
         }
 
-        .flag-icon {
-            width: 24px;
-            height: 18px;
-            object-fit: cover;
-            border-radius: 4px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        .client-info-list {
-            display: grid;
-            grid-template-columns: repeat(5, auto);
-            justify-content: center;
-            gap: 8px 16px;
-            padding: 0;
+        .detail-title {
             margin: 0;
-            list-style: none;
-            width: 100%;
+            font-size: 1.2rem;
+            font-weight: 850;
         }
 
-        .info-item {
-            background: rgba(255,255,255,0.02);
-            border-radius: 6px;
-            padding: 4px 10px;
-            gap: 6px;
-            font-size: 0.85rem;
-            display: flex;
-            align-items: center;
-            transition: all 0.3s;
-            position: relative;
-            padding-bottom: 5px; /* 预留进度条空间 */
+        .detail-close {
+            width: 38px;
+            height: 38px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(148, 163, 184, 0.08);
         }
 
-        .info-item:hover {
-            background: rgba(110,193,228,0.06);
+        .detail-body {
+            display: grid;
+            gap: 14px;
+            padding: 18px;
         }
 
-        .info-item i {
-            font-size: 1rem;
-            color: var(--primary-color);
-        }
-
-        .info-label {
-            color: var(--text-secondary-dark);
+        .detail-info {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            color: var(--muted);
             font-size: 0.9rem;
         }
 
-        .info-value {
-            color: var(--text-primary-dark);
-            font-weight: 600;
-            margin-left: auto;
+        .chart-panel {
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 14px;
+            background: rgba(148, 163, 184, 0.07);
         }
 
-        .info-unit {
-            color: var(--text-secondary-dark);
-            font-size: 0.85rem;
-            margin-left: 4px;
+        #history-chart {
+            width: 100%;
+            height: 280px;
         }
 
-        .info-bar {
+        .client-card::before {
+            content: '';
             position: absolute;
             left: 8px;
-            right: 8px;
-            bottom: 1.5px;
-            width: auto;
-            height: 1.5px;
-            background: rgba(110,193,228,0.10);
-            border-radius: 2px;
+            top: 10px;
+            bottom: 10px;
+            width: 4px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, var(--green), var(--primary-strong));
+        }
+
+        .client-card.offline {
+            opacity: 0.74;
+        }
+
+        .client-card.offline::before {
+            background: linear-gradient(180deg, var(--red), #f97316);
+        }
+
+        .client-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px 6px 18px;
+        }
+
+        .client-name-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .client-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            font-size: 1.02rem;
+            font-weight: 800;
+        }
+
+        .client-name span:last-child {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .client-meta {
+            display: flex;
+            flex: 1;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 6px;
             margin-top: 0;
             overflow: hidden;
+            color: var(--muted);
+            font-size: 0.76rem;
         }
-        .info-bar-inner {
+
+        .client-meta span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 9px;
+            border-radius: 999px;
+            color: #052e1b;
+            background: rgba(52, 211, 153, 0.92);
+            font-size: 0.76rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .status-pill.offline {
+            color: #450a0a;
+            background: rgba(251, 113, 133, 0.92);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: currentColor;
+        }
+
+        .flag-icon {
+            width: 21px;
+            height: 15px;
+            object-fit: cover;
+            border-radius: 5px;
+            background: rgba(148, 163, 184, 0.18);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
+            flex: 0 0 auto;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 6px;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            padding: 6px 14px 12px 18px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(110, 231, 255, 0.28) transparent;
+        }
+
+        .metric-grid::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .metric-grid::-webkit-scrollbar-thumb {
+            border-radius: 999px;
+            background: rgba(110, 231, 255, 0.28);
+        }
+
+        .metric {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            padding: 7px 8px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: rgba(148, 163, 184, 0.07);
+        }
+
+        .metric-main {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            min-width: 0;
+            margin-top: 4px;
+        }
+
+        .metric-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            min-width: 0;
+            color: var(--muted);
+            font-size: 0.7rem;
+            white-space: nowrap;
+        }
+
+        .metric-label i {
+            flex: 0 0 auto;
+            color: var(--primary-strong);
+        }
+
+        .metric-label-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .metric-label-extra {
+            margin-left: auto;
+            overflow: hidden;
+            color: var(--primary);
+            font-weight: 800;
+            text-align: right;
+            text-overflow: ellipsis;
+        }
+
+        .metric-value {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            color: var(--text);
+            font-size: 0.86rem;
+            font-weight: 800;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .metric-sub {
+            margin-left: auto;
+            color: var(--muted);
+            font-size: 0.68rem;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .progress-line {
+            height: 3px;
+            margin-top: auto;
+            overflow: hidden;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.14);
+        }
+
+        .progress-line span {
+            display: block;
             height: 100%;
-            border-radius: 2px;
-            background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
-            transition: width 0.4s cubic-bezier(.4,2,.6,1);
+            width: 0;
+            max-width: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--primary), var(--green));
         }
 
-        /* Light theme */
-        body.light {
-            background: var(--bg-light);
-            color: var(--text-primary-light);
-        }
-
-        body.light .top-bar {
-            background: rgba(255, 255, 255, 0.95);
-        }
-
-        body.light .stat-card,
-        body.light #clients-container {
-            background: var(--bg-card-light);
-        }
-
-        body.light .client-list-row {
-            background: rgba(0, 0, 0, 0.02);
-        }
-
-        body.light .client-list-row:hover {
-            background: rgba(110, 193, 228, 0.08);
-        }
-
-        body.light .info-item {
-            background: rgba(0, 0, 0, 0.03);
-        }
-
-        body.light .info-item:hover {
-            background: rgba(110, 193, 228, 0.1);
-        }
-
-        body.light .client-id {
-            color: var(--text-primary-light);
-        }
-
-        body.light .info-label {
-            color: var(--text-secondary-light);
-        }
-
-        body.light .info-value {
-            color: var(--text-primary-light);
-        }
-
-        /* Responsive design */
-        @media (max-width: 1200px) {
-            .stat-bar {
-                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-                padding: 0 20px;
-            }
-
-            #clients-container {
-                width: calc(100% - 40px);
-            }
-
-            .hide-on-small {
-                display: none !important;
+        @media (max-width: 1040px) {
+            .metric-grid {
+                grid-template-columns: repeat(5, minmax(96px, 1fr));
+                overflow-x: auto;
+                padding-right: 10px;
             }
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 720px) {
+            .page-shell {
+                width: min(100% - 20px, 640px);
+                padding-top: 10px;
+            }
+
             .top-bar {
-                padding: 16px 20px;
-                /* 保持左右布局，不再切换为上下 */
-            }
-
-            .logo {
-                font-size: 1.6rem;
-            }
-
-            .stat-bar {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-
-            .client-info-list {
-                grid-template-columns: 1fr;
-            }
-
-            .client-main {
+                align-items: stretch;
                 flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
+                border-radius: 20px;
+                padding: 14px;
             }
-        }
 
-        @media (max-width: 1000px) {
-            .info-label {
-                display: none !important;
+            .brand-icon {
+                width: 42px;
+                height: 42px;
+                border-radius: 14px;
             }
-        }
 
-        @media (max-width: 770px) {
-            .client-info-list {
-                grid-template-columns: repeat(3, auto);
+            .brand-subtitle {
+                font-size: 0.82rem;
             }
-        }
 
-        @media (max-width: 500px) {
-            .client-info-list {
-                grid-template-columns: repeat(2, auto);
+            .top-actions {
+                width: 100%;
             }
-        }
 
-        @media (min-width: 770px) {
+            .action-btn {
+                flex: 1;
+            }
+
             .stat-bar {
-                width: 710px;
-                margin-left: auto;
-                margin-right: auto;
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 8px;
+                margin: 10px 0;
+            }
+
+            .stat-card {
+                padding: 12px 10px;
+                border-radius: 16px;
+            }
+
+            .stat-title {
+                gap: 6px;
+                font-size: 0.72rem;
+            }
+
+            .stat-value {
+                font-size: 1.55rem;
+            }
+
+            .stat-value .unit {
+                display: none;
+            }
+
+            .client-header {
+                align-items: center;
+                padding: 9px 10px 5px 14px;
+            }
+
+            .status-pill {
+                align-self: auto;
+            }
+
+            .metric-grid {
+                grid-auto-flow: column;
+                grid-template-columns: none;
+                grid-template-rows: repeat(2, auto);
+                grid-auto-columns: 112px;
+                gap: 6px;
+                overflow-x: auto;
+                padding: 6px 10px 12px 14px;
+            }
+
+            .metric {
+                min-height: 58px;
+                padding: 7px 8px;
+                border-radius: 10px;
+            }
+
+            .metric-label {
+                font-size: 0.72rem;
+            }
+
+            .metric-value {
+                font-size: 0.9rem;
+            }
+
+            .metric-sub {
+                font-size: 0.7rem;
+            }
+
+            .client-meta span:nth-child(1),
+            .client-meta span:nth-child(3) {
+                display: none;
             }
         }
 
-        .client-list-row.offline {
-            background: rgba(231, 76, 60, 0.08); /* 离线为淡红色 */
-            filter: grayscale(0.3);
-            opacity: 0.7;
+        @media (max-width: 390px) {
+            .metric-grid {
+                grid-auto-columns: 104px;
+            }
         }
-        .client-list-row.offline,
-        .client-list-row.offline .info-value,
-        .client-list-row.offline .client-id {
-            color: #aaa !important;
-        }
-        .client-list-row.offline::before {
-            background: linear-gradient(180deg, #e74c3c, #c0392b); /* 红色渐变 */
-            opacity: 0.7;
-        }
-        .client-list-row:not(.offline)::before {
-            background: linear-gradient(180deg, var(--primary-color), var(--primary-dark));
-            opacity: 0.5;
+
+        @media (max-width: 720px) {
+            .detail-info {
+                grid-template-columns: 1fr;
+            }
+
+            #history-chart {
+                height: 220px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container mt-2">
-        <div class="top-bar">
-            <div class="logo"><i class="bi bi-shield-lock"></i> 探针监控</div>
+    <main class="page-shell">
+        <section class="top-bar">
+            <div class="brand">
+                <div class="brand-icon"><i class="bi bi-activity"></i></div>
+                <div>
+                    <h1 class="brand-title">探针监控</h1>
+                    <div class="brand-subtitle">实时查看服务器资源、网络与最后上报时间</div>
+                </div>
+            </div>
             <div class="top-actions">
                 {% if is_logged_in %}
-                    <button class="action-btn" onclick="window.location.href='/admin'">后台管理</button>
+                    <button class="action-btn" onclick="window.location.href='/admin'"><i class="bi bi-sliders"></i>后台管理</button>
                 {% else %}
-                    <button class="action-btn" onclick="window.location.href='/login'">登录</button>
+                    <button class="action-btn" onclick="window.location.href='/login'"><i class="bi bi-person-lock"></i>登录</button>
                 {% endif %}
-                <button class="theme-btn" id="theme-toggle"><i class="bi bi-brightness-high"></i></button>
+                <button class="theme-btn" id="theme-toggle" aria-label="切换主题"><i class="bi bi-brightness-high"></i></button>
             </div>
-        </div>
-        <div class="stat-bar">
+        </section>
+
+        <section class="stat-bar" aria-label="服务器统计">
             <div class="stat-card">
-                <div class="stat-title"><span class="dot dot-green"></span>在线服务器</div>
-                <div class="stat-value" id="stat-online">0 <span class="unit">台</span></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-title"><span class="dot dot-red"></span>离线服务器</div>
-                <div class="stat-value" id="stat-offline">0 <span class="unit">台</span></div>
+                <div class="stat-title"><span class="dot dot-green"></span>在线</div>
+                <div class="stat-value" id="stat-online">0<span class="unit">台</span></div>
             </div>
             <div class="stat-card">
-                <div class="stat-title"><span class="dot dot-blue"></span>服务器总数</div>
-                <div class="stat-value" id="stat-total">0 <span class="unit">台</span></div>
+                <div class="stat-title"><span class="dot dot-red"></span>离线</div>
+                <div class="stat-value" id="stat-offline">0<span class="unit">台</span></div>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card-body p-0" style="background:none;box-shadow:none;border:none;">
-                    <div id="clients-container"></div>
+            <div class="stat-card">
+                <div class="stat-title"><span class="dot dot-blue"></span>总数</div>
+                <div class="stat-value" id="stat-total">0<span class="unit">台</span></div>
+            </div>
+        </section>
+
+        <section class="group-tabs" id="group-tabs" aria-label="分组筛选"></section>
+        <section id="clients-container" aria-live="polite"></section>
+    </main>
+
+    <div class="detail-modal" id="detail-modal">
+        <div class="detail-card">
+            <div class="detail-head">
+                <h2 class="detail-title" id="detail-title">客户端详情</h2>
+                <button type="button" class="detail-close" id="detail-close">×</button>
+            </div>
+            <div class="detail-body">
+                <div class="detail-info" id="detail-info"></div>
+                <div class="chart-panel">
+                    <canvas id="history-chart"></canvas>
                 </div>
             </div>
         </div>
@@ -538,227 +727,407 @@
 
     <script src="/static/js/bootstrap.bundle.min.js"></script>
     <script>
-    // 白天/黑夜切换
     const themeBtn = document.getElementById('theme-toggle');
+
     function setTheme(light) {
         document.body.classList.toggle('light', light);
         themeBtn.innerHTML = light ? '<i class="bi bi-moon"></i>' : '<i class="bi bi-brightness-high"></i>';
         localStorage.setItem('theme', light ? 'light' : 'dark');
     }
-    themeBtn.onclick = () => setTheme(!document.body.classList.contains('light'));
-    if(localStorage.getItem('theme')==='light') setTheme(true);
 
-    // 工具函数
-    function fmtPercent(val) {
-        return val !== undefined && val !== null ? val.toFixed(1) + '%' : '-';
+    themeBtn.onclick = () => setTheme(!document.body.classList.contains('light'));
+    if (localStorage.getItem('theme') === 'light') setTheme(true);
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>'"]/g, char => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[char]));
     }
-    function fmtMB(val) {
-        return val !== undefined && val !== null ? (val/1024/1024).toFixed(2) : '-';
+
+    function num(value) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
     }
-    function fmtGB(val) {
-        return val !== undefined && val !== null ? (val/1024/1024/1024).toFixed(2) : '-';
+
+    function clampPercent(value) {
+        const parsed = num(value);
+        if (parsed === null) return 0;
+        return Math.max(0, Math.min(100, parsed));
     }
+
+    function fmtPercent(value) {
+        const parsed = num(value);
+        return parsed === null ? '-' : `${parsed.toFixed(1)}%`;
+    }
+
+    function fmtMiB(value) {
+        const parsed = num(value);
+        return parsed === null ? '-' : (parsed / 1024 / 1024).toFixed(2);
+    }
+
+    function fmtGiB(value) {
+        const parsed = num(value);
+        return parsed === null ? '-' : (parsed / 1024 / 1024 / 1024).toFixed(2);
+    }
+
     function fmtUptime(boot) {
-        if (!boot) return '-';
-        const sec = Math.floor(Date.now()/1000 - boot);
-        const d = Math.floor(sec/86400);
-        const h = Math.floor((sec%86400)/3600);
-        const m = Math.floor((sec%3600)/60);
-        let parts = [];
-        if (d > 0) parts.push(d + 'D');
-        if (h > 0) parts.push(h + 'H');
-        if (m > 0 || parts.length === 0) parts.push(m + 'M');
+        const parsed = num(boot);
+        if (parsed === null) return '-';
+        const sec = Math.max(0, Math.floor(Date.now() / 1000 - parsed));
+        const d = Math.floor(sec / 86400);
+        const h = Math.floor((sec % 86400) / 3600);
+        const m = Math.floor((sec % 3600) / 60);
+        const parts = [];
+        if (d > 0) parts.push(`${d}天`);
+        if (h > 0) parts.push(`${h}小时`);
+        if (m > 0 || parts.length === 0) parts.push(`${m}分`);
         return parts.join('');
     }
 
-    // 渲染客户端卡片和统计
+    function parseLastSeen(value) {
+        if (!value) return null;
+        let text = String(value).split('.')[0];
+        if (text.length === 19 && !/[zZ]|[+-]\d\d:?\d\d$/.test(text)) text += 'Z';
+        const time = Date.parse(text);
+        return Number.isNaN(time) ? null : time;
+    }
+
+    function fmtLastSeen(value) {
+        const time = parseLastSeen(value);
+        if (!time) return { abs: '暂无上报', rel: '未收到数据', seconds: Infinity };
+        const seconds = Math.max(0, Math.floor((Date.now() - time) / 1000));
+        let rel = `${seconds}秒前`;
+        if (seconds >= 86400) rel = `${Math.floor(seconds / 86400)}天前`;
+        else if (seconds >= 3600) rel = `${Math.floor(seconds / 3600)}小时前`;
+        else if (seconds >= 60) rel = `${Math.floor(seconds / 60)}分钟前`;
+        return {
+            abs: new Date(time).toLocaleString('zh-CN', { hour12: false }),
+            rel,
+            seconds
+        };
+    }
+
+    const flagCache = new Map();
+    const latestClients = new Map();
+    let selectedGroup = '全部';
+    let latestClientList = [];
+
+    function flagUrl(countryCode) {
+        if (!/^[A-Za-z]{2}$/.test(countryCode || '')) return '';
+        return `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`;
+    }
+
+    function warmFlag(url) {
+        if (!url) return Promise.resolve();
+        if (flagCache.has(url)) return flagCache.get(url);
+        const image = new Image();
+        image.decoding = 'async';
+        const loaded = new Promise(resolve => {
+            image.onload = async () => {
+                try {
+                    if (image.decode) await image.decode();
+                } catch (error) {}
+                resolve();
+            };
+            image.onerror = resolve;
+            image.src = url;
+        });
+        flagCache.set(url, loaded);
+        return loaded;
+    }
+
+    async function warmClientFlags(clients) {
+        const urls = new Set();
+        clients.forEach(client => {
+            try {
+                const status = JSON.parse(client.status || '{}');
+                const url = flagUrl(status.system?.country_code || '');
+                if (url) urls.add(url);
+            } catch (error) {}
+        });
+        await Promise.all(Array.from(urls, warmFlag));
+    }
+
+    function metric(icon, label, value, sub = '', percent = null, extraClass = '', labelExtra = '') {
+        const width = percent === null ? 0 : clampPercent(percent);
+        return `<div class="metric ${extraClass}">
+            <div class="metric-label">
+                <i class="bi ${icon}"></i>
+                <span class="metric-label-text">${escapeHtml(label)}</span>
+                ${labelExtra ? `<span class="metric-label-extra">${escapeHtml(labelExtra)}</span>` : ''}
+            </div>
+            <div class="metric-main">
+                <div class="metric-value">${escapeHtml(value)}</div>
+                ${sub ? `<div class="metric-sub">${escapeHtml(sub)}</div>` : ''}
+            </div>
+            ${percent === null ? '' : `<div class="progress-line"><span style="width:${width}%"></span></div>`}
+        </div>`;
+    }
+
+    function parseStatus(status) {
+        try {
+            const parsed = JSON.parse(status || '{}');
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (error) {
+            return {};
+        }
+    }
+
+    function drawHistoryChart(rows) {
+        const canvas = document.getElementById('history-chart');
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        ctx.clearRect(0, 0, rect.width, rect.height);
+        const padding = 28;
+        const width = rect.width - padding * 2;
+        const height = rect.height - padding * 2;
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 4; i++) {
+            const y = padding + (height / 4) * i;
+            ctx.beginPath();
+            ctx.moveTo(padding, y);
+            ctx.lineTo(rect.width - padding, y);
+            ctx.stroke();
+        }
+        const points = rows.map(row => {
+            const status = parseStatus(row.status);
+            return {
+                cpu: Number(status.system?.cpu_percent) || 0,
+                memory: Number(status.system?.memory_percent) || 0
+            };
+        });
+        if (points.length < 2) {
+            ctx.fillStyle = 'rgba(148, 163, 184, 0.9)';
+            ctx.fillText('历史数据不足，等待更多上报', padding, padding + 18);
+            return;
+        }
+        function line(key, color) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            points.forEach((point, index) => {
+                const x = padding + (width * index) / (points.length - 1);
+                const y = padding + height - (height * Math.min(100, point[key])) / 100;
+                if (index === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+        }
+        line('cpu', '#38bdf8');
+        line('memory', '#34d399');
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('CPU', padding, 16);
+        ctx.fillStyle = '#34d399';
+        ctx.fillText('内存', padding + 44, 16);
+    }
+
+    async function openDetail(clientId) {
+        const client = latestClients.get(clientId);
+        if (!client) return;
+        const status = parseStatus(client.status);
+        const sys = status.system || {};
+        document.getElementById('detail-title').innerText = client.name || client.client_id || '客户端详情';
+        document.getElementById('detail-info').innerHTML = [
+            `分组：${client.group_name || '默认'}`,
+            client.note ? `备注：${client.note}` : '',
+            `系统：${sys.os || '-'}`,
+            `架构：${sys.arch || '-'}`,
+            `公网 IP：${sys.public_ip || '-'}`,
+            `内网 IP：${sys.ip || '-'}`,
+            `MAC：${sys.mac || '-'}`,
+            `最后上报：${fmtLastSeen(client.last_seen).abs}`
+        ].filter(Boolean).map(item => `<div>${escapeHtml(item)}</div>`).join('');
+        document.getElementById('detail-modal').classList.add('open');
+        const res = await fetch(`/api/clients/${encodeURIComponent(client.client_id)}/history?limit=80`);
+        const rows = res.ok ? await res.json() : [];
+        drawHistoryChart(rows);
+    }
+
+    const clientNodes = new Map();
+
+    function createClientNode() {
+        const article = document.createElement('article');
+        article.className = 'client-card';
+        article.innerHTML = `<header class="client-header">
+            <div class="client-name-wrap">
+                <div class="client-name"><span class="client-name-text"></span></div>
+                <div class="client-meta"></div>
+            </div>
+            <div class="status-pill"><span class="status-dot"></span><span class="status-text"></span></div>
+        </header>
+        <div class="metric-grid"></div>`;
+        return article;
+    }
+
+    function renderGroupTabs(clients) {
+        const groups = ['全部', ...Array.from(new Set(clients.map(client => client.group_name || '默认'))).sort((a, b) => a.localeCompare(b))];
+        if (!groups.includes(selectedGroup)) selectedGroup = '全部';
+        document.getElementById('group-tabs').innerHTML = groups.map(group => {
+            const count = group === '全部' ? clients.length : clients.filter(client => (client.group_name || '默认') === group).length;
+            return `<button type="button" class="group-tab${group === selectedGroup ? ' active' : ''}" data-group="${escapeHtml(group)}">${escapeHtml(group)} ${count}</button>`;
+        }).join('');
+    }
+
     function renderClients(clients) {
-        // 在线优先，client_id升序
+        latestClientList = clients;
+        latestClients.clear();
+        clients.forEach(client => latestClients.set(client.client_id || client.name || '未知客户端', client));
+        renderGroupTabs(clients);
+        const visibleClients = selectedGroup === '全部' ? clients : clients.filter(client => (client.group_name || '默认') === selectedGroup);
         const now = Date.now() / 1000;
-        clients.sort((a, b) => {
-            let statusA = {}, statusB = {};
-            let validA = false, validB = false;
-            try { statusA = JSON.parse(a.status); validA = statusA && typeof statusA === 'object' && statusA.system; } catch {}
-            try { statusB = JSON.parse(b.status); validB = statusB && typeof statusB === 'object' && statusB.system; } catch {}
-            let lastSeenA = 0, lastSeenB = 0;
-            try { let ls = a.last_seen.split('.')[0]; if (ls.length === 19) ls += 'Z'; lastSeenA = Date.parse(ls)/1000; } catch {}
-            try { let ls = b.last_seen.split('.')[0]; if (ls.length === 19) ls += 'Z'; lastSeenB = Date.parse(ls)/1000; } catch {}
-            const onlineA = a.is_active && validA && (now - lastSeenA < 30);
-            const onlineB = b.is_active && validB && (now - lastSeenB < 30);
+        let online = 0;
+        let offline = 0;
+
+        visibleClients.sort((a, b) => {
+            const lastA = fmtLastSeen(a.last_seen);
+            const lastB = fmtLastSeen(b.last_seen);
+            let statusA = {};
+            let statusB = {};
+            try { statusA = JSON.parse(a.status || '{}'); } catch {}
+            try { statusB = JSON.parse(b.status || '{}'); } catch {}
+            const onlineA = a.is_active && statusA.system && lastA.seconds < 30;
+            const onlineB = b.is_active && statusB.system && lastB.seconds < 30;
             if (onlineA !== onlineB) return onlineA ? -1 : 1;
             return (a.client_id || '').localeCompare(b.client_id || '');
         });
-        let online = 0, offline = 0;
+
         const container = document.getElementById('clients-container');
+        const fragment = document.createDocumentFragment();
+        const seenKeys = new Set();
+        const allKeys = new Set(clients.map(client => client.client_id || client.name || '未知客户端'));
 
-        // Store the existing DOM nodes to be reused
-        const existingNodes = new Map();
-        Array.from(container.children).forEach(node => {
-            if (node.id.startsWith('client-row-')) {
-                const clientId = node.id.replace('client-row-', '');
-                existingNodes.set(clientId, node);
-            }
-        });
-
-        // Create a new ordered list of DOM nodes
-        const newOrderedNodes = [];
-
-        clients.forEach(client => {
+        visibleClients.forEach(client => {
             let status = {};
-            let validStatus = false;
-            try {
-                status = JSON.parse(client.status);
-                validStatus = status && typeof status === 'object' && status.system;
-            } catch(e){ validStatus = false; }
-            let lastSeen = 0;
-            try {
-                let ls = client.last_seen.split('.')[0];
-                if (ls.length === 19) ls += 'Z';
-                lastSeen = Date.parse(ls)/1000;
-            } catch(e) { lastSeen = 0; }
-            const isOnline = client.is_active && validStatus && (now - lastSeen < 30);
-            
+            try { status = JSON.parse(client.status || '{}'); } catch {}
             const sys = status.system || {};
             const net = status.network || {};
-            const clientName = client.client_id;
+            const lastSeen = fmtLastSeen(client.last_seen);
+            const isOnline = Boolean(client.is_active && status.system && lastSeen.seconds < 30);
+            const clientName = client.client_id || client.name || '未知客户端';
             const countryCode = sys.country_code || '';
-            const flagUrl = countryCode ? `https://flagcdn.com/w20/${countryCode.toLowerCase()}.png` : '';
+            const countryName = sys.country_name || '';
+            const cpuCount = sys.cpu_count ? `${sys.cpu_count}C` : '';
+            const swapInfo = sys.swap_total ? `Swap ${fmtPercent(sys.swap_percent)} / ${sys.swap_total}` : '';
+            const arch = sys.arch || '';
+            const publicIp = sys.public_ip || sys.ip || '-';
+            const flag = flagUrl(countryCode);
+            if (isOnline) online++; else offline++;
 
-            const clientRowId = `client-row-${clientName}`;
-            let clientRow = existingNodes.get(clientName);
+            const key = client.client_id || client.name || clientName;
+            seenKeys.add(key);
+            let node = clientNodes.get(key);
+            if (!node) {
+                node = createClientNode();
+                clientNodes.set(key, node);
+            }
 
-            if (clientRow) {
-                // 客户端已存在，执行更新操作
-                // 更新状态点
-                const statusDot = clientRow.querySelector('.client-status-dot');
-                if (statusDot) {
-                    statusDot.classList.toggle('online', isOnline);
-                    statusDot.classList.toggle('offline', !isOnline);
+            node.classList.toggle('offline', !isOnline);
+            node.dataset.clientId = key;
+
+            const name = node.querySelector('.client-name');
+            const nameText = node.querySelector('.client-name-text');
+            let flagImg = node.querySelector('.flag-icon');
+            if (flag) {
+                if (!flagImg) {
+                    flagImg = document.createElement('img');
+                    flagImg.className = 'flag-icon';
+                    flagImg.loading = 'eager';
+                    flagImg.decoding = 'async';
+                    name.insertBefore(flagImg, nameText);
                 }
-
-                // 更新flag-icon (只有当src变化时才更新)
-                const flagImg = clientRow.querySelector('.flag-icon');
-                if (flagImg && flagUrl && !flagImg.src.includes(flagUrl)) {
-                    flagImg.src = flagUrl;
-                } else if (!flagUrl && flagImg) {
-                    flagImg.remove(); // 如果没有flagUrl，则移除图片
-                }
-
-                // 如果客户端是活跃的，才更新数据
-                if (client.is_active) {
-                    // 更新信息列表
-                    const infoList = clientRow.querySelector('.client-info-list');
-                    if (infoList) {
-                        // 仅更新关键动态数据，避免innerHTML重新渲染整个列表
-                        infoList.querySelector('[data-info="os"] .info-value').innerText = sys.os||'-';
-                        infoList.querySelector('[data-info="cpu"] .info-value').innerText = fmtPercent(sys.cpu_percent);
-                        infoList.querySelector('[data-info="memory"] .info-value').innerHTML = `${fmtPercent(sys.memory_percent)}<span class='hide-on-small'>&nbsp;(${sys.memory_total})</span>`;
-                        infoList.querySelector('[data-info="disk"] .info-value').innerHTML = `${fmtPercent(sys.disk_usage)}<span class='hide-on-small'>&nbsp;(${sys.disk_total})</span>`;
-                        infoList.querySelector('[data-info="uptime"] .info-value').innerText = fmtUptime(sys.boot_time);
-                        infoList.querySelector('[data-info="upload_speed"] .info-value').innerText = fmtMB(net.upload_speed);
-                        infoList.querySelector('[data-info="download_speed"] .info-value').innerText = fmtMB(net.download_speed);
-                        infoList.querySelector('[data-info="bytes_sent"] .info-value').innerText = fmtGB(net.bytes_sent);
-                        infoList.querySelector('[data-info="bytes_recv"] .info-value').innerText = fmtGB(net.bytes_recv);
-
-                        // 更新进度条
-                        infoList.querySelector('[data-info="cpu"] .info-bar-inner').style.width = `${sys.cpu_percent||0}%`;
-                        infoList.querySelector('[data-info="memory"] .info-bar-inner').style.width = `${sys.memory_percent||0}%`;
-                        infoList.querySelector('[data-info="disk"] .info-bar-inner').style.width = `${sys.disk_usage||0}%`;
-                    }
-                } // End if (client.is_active)
-
-                // 如果客户端状态改变，更新class
-                clientRow.classList.toggle('offline', !isOnline);
-
-            } else {
-                // Client does not exist, create new card
-                let cardHtml = `<div class="client-list-row${isOnline?'':' offline'}" id="${clientRowId}">
-                    <div class="client-main">
-                        <span class="client-status-dot ${isOnline?'online':'offline'}"></span>
-                        <span class="client-id">
-                            ${flagUrl ? `<img src="${flagUrl}" class="flag-icon" alt="${sys.country_name || ''}" title="${sys.country_name || ''}">` : ''}
-                            ${clientName}
-                        </span>
-                    </div>
-                    <ul class="client-info-list">
-                        <li class="info-item" data-info="os"><i class="bi bi-pc"></i><span class="info-label">OS</span><span class="info-value">${sys.os||'-'}</span><div class="info-bar"><div class="info-bar-inner" style="width:0%;background:transparent;"></div></div></li>
-                        <li class="info-item" data-info="cpu">
-                            <i class="bi bi-cpu"></i>
-                            <span class="info-label">CPU</span>
-                            <span class="info-value">${fmtPercent(sys.cpu_percent)}</span>
-                            <div class="info-bar"><div class="info-bar-inner" style="width:${sys.cpu_percent||0}%;"></div></div>
-                        </li>
-                        <li class="info-item" data-info="memory">
-                            <i class="bi bi-memory"></i>
-                            <span class="info-label">内存</span>
-                            <span class="info-value">${fmtPercent(sys.memory_percent)}<span class='hide-on-small'>&nbsp;(${sys.memory_total})</span></span>
-                            <div class="info-bar"><div class="info-bar-inner" style="width:${sys.memory_percent||0}%;"></div></div>
-                        </li>
-                        <li class="info-item" data-info="disk">
-                            <i class="bi bi-hdd"></i>
-                            <span class="info-label">硬盘</span>
-                            <span class="info-value">${fmtPercent(sys.disk_usage)}<span class='hide-on-small'>&nbsp;(${sys.disk_total})</span></span>
-                            <div class="info-bar"><div class="info-bar-inner" style="width:${sys.disk_usage||0}%;"></div></div>
-                        </li>
-                        <li class="info-item" data-info="uptime"><i class="bi bi-clock-history"></i><span class="info-label">时长</span><span class="info-value">${fmtUptime(sys.boot_time)}</span><div class="info-bar"><div class="info-bar-inner" style="width:0%;background:transparent;"></div></div></li>
-                        <li class="info-item" data-info="upload_speed"><i class="bi bi-arrow-up-circle"></i><span class="info-label">UP</span><span class="info-value">${fmtMB(net.upload_speed)}</span><span class="info-unit">MiB/s</span><div class="info-bar"><div class="info-bar-inner" style="width:0%;background:transparent;"></div></div></li>
-                        <li class="info-item" data-info="download_speed"><i class="bi bi-arrow-down-circle"></i><span class="info-label">DOWN</span><span class="info-value">${fmtMB(net.download_speed)}</span><span class="info-unit">MiB/s</span><div class="info-bar"><div class="info-bar-inner" style="width:0%;background:transparent;"></div></div></li>
-                        <li class="info-item" data-info="bytes_sent"><i class="bi bi-arrow-up-right-circle"></i><span class="info-label">已发</span><span class="info-value">${fmtGB(net.bytes_sent)}</span><span class="info-unit">GiB</span><div class="info-bar"><div class="info-bar-inner" style="width:0%;background:transparent;"></div></div></li>
-                        <li class="info-item" data-info="bytes_recv"><i class="bi bi-arrow-down-left-circle"></i><span class="info-label">已收</span><span class="info-value">${fmtGB(net.bytes_recv)}</span><span class="info-unit">GiB</span><div class="info-bar"><div class="info-bar-inner" style="width:0%;background:transparent;"></div></div></li>
-                    </ul>
-                </div>`;
-                clientRow = document.createElement('div'); // Create a new div to hold the card HTML
-                clientRow.innerHTML = cardHtml;
-                clientRow = clientRow.firstElementChild; // Get the actual card element
-                existingNodes.set(clientName, clientRow); // Add to existingNodes for potential future updates
+                if (flagImg.getAttribute('src') !== flag) flagImg.src = flag;
+                flagImg.alt = countryName;
+                flagImg.title = countryName;
+            } else if (flagImg) {
+                flagImg.remove();
             }
-            newOrderedNodes.push(clientRow); // Add to the new ordered list
-            // Update online/offline count
-            if (isOnline) { online++; } else { offline++; }
+
+            nameText.textContent = clientName;
+            node.querySelector('.client-meta').innerHTML = `
+                <span>分组：${escapeHtml(client.group_name || '默认')}</span>
+                ${client.note ? `<span>备注：${escapeHtml(client.note)}</span>` : ''}
+                <span><i class="bi bi-clock-history"></i> 最后上报：${escapeHtml(lastSeen.abs)}</span>
+                <span>${escapeHtml(lastSeen.rel)}</span>
+                ${sys.mac ? `<span>MAC：${escapeHtml(sys.mac)}</span>` : ''}
+            `;
+
+            const statusPill = node.querySelector('.status-pill');
+            statusPill.classList.toggle('offline', !isOnline);
+            node.querySelector('.status-text').textContent = isOnline ? '在线' : '离线';
+            node.querySelector('.metric-grid').innerHTML = `
+                ${metric('bi-pc-display', '系统', sys.os || '-', sys.hostname || sys.platform || '', null, '', arch)}
+                ${metric('bi-cpu', 'CPU', fmtPercent(sys.cpu_percent), '', sys.cpu_percent, '', cpuCount)}
+                ${metric('bi-memory', '内存', fmtPercent(sys.memory_percent), sys.memory_total || '', sys.memory_percent, '', swapInfo)}
+                ${metric('bi-hdd', '硬盘', fmtPercent(sys.disk_usage), sys.disk_total || '', sys.disk_usage)}
+                ${metric('bi-hourglass-split', '运行', fmtUptime(sys.boot_time))}
+                ${metric('bi-arrow-up-circle', '上传', fmtMiB(net.upload_speed), 'MiB/s')}
+                ${metric('bi-arrow-down-circle', '下载', fmtMiB(net.download_speed), 'MiB/s')}
+                ${metric('bi-cloud-arrow-up', '已发', fmtGiB(net.bytes_sent), 'GiB')}
+                ${metric('bi-cloud-arrow-down', '已收', fmtGiB(net.bytes_recv), 'GiB')}
+                ${metric('bi-wifi', '网络', publicIp, countryName || '')}
+            `;
+
+            fragment.appendChild(node);
         });
 
-        // Remove client rows that are no longer in the fetched data
-        Array.from(container.children).forEach(row => {
-            const id = row.id.replace('client-row-', '');
-            if (!clients.some(c => c.client_id === id)) {
-                row.remove();
+        for (const [key, node] of clientNodes) {
+            if (!allKeys.has(key)) {
+                node.remove();
+                clientNodes.delete(key);
+                latestClients.delete(key);
             }
-        });
+        }
 
-        // Update statistics
-        document.getElementById('stat-total').innerText = clients.length;
-        document.getElementById('stat-online').innerText = online;
-        document.getElementById('stat-offline').innerText = offline;
-
-        // Reorder existing DOM elements to match the sorted clients array
-        // This is a flicker-free way to reorder elements.
-        // It iterates through the desired order and ensures each element is in its correct place.
-        const fragment = document.createDocumentFragment();
-        newOrderedNodes.forEach(node => {
-            if (node) {
-                fragment.appendChild(node);
-            }
-        });
-        container.innerHTML = ''; // Clear existing content efficiently
-        container.appendChild(fragment); // Append once, no flicker
+        document.getElementById('stat-total').innerHTML = `${visibleClients.length}<span class="unit">台</span>`;
+        document.getElementById('stat-online').innerHTML = `${online}<span class="unit">台</span>`;
+        document.getElementById('stat-offline').innerHTML = `${offline}<span class="unit">台</span>`;
+        if (visibleClients.length) {
+            container.replaceChildren(fragment);
+        } else {
+            container.innerHTML = '<div class="empty-state">还没有客户端上报数据</div>';
+        }
     }
 
-    // 定时获取并渲染
     async function fetchClients() {
         try {
             const res = await fetch('/api/clients');
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const clients = await res.json();
+            await warmClientFlags(clients);
             renderClients(clients);
-        } catch(e) {
-            document.getElementById('clients-container').innerHTML = '<div class="text-center text-danger">无法获取客户端数据</div>';
-            document.getElementById('stat-total').innerText = 0;
-            document.getElementById('stat-online').innerText = 0;
-            document.getElementById('stat-offline').innerText = 0;
-            console.error('fetchClients error:', e);
+        } catch (error) {
+            document.getElementById('stat-total').innerHTML = '0<span class="unit">台</span>';
+            document.getElementById('stat-online').innerHTML = '0<span class="unit">台</span>';
+            document.getElementById('stat-offline').innerHTML = '0<span class="unit">台</span>';
+            document.getElementById('clients-container').innerHTML = '<div class="error-state">无法获取客户端数据</div>';
+            console.error('fetchClients error:', error);
         }
     }
+
     fetchClients();
     setInterval(fetchClients, 5000);
+    document.getElementById('clients-container').addEventListener('click', event => {
+        const card = event.target.closest('.client-card');
+        if (card?.dataset.clientId) openDetail(card.dataset.clientId);
+    });
+    document.getElementById('group-tabs').addEventListener('click', event => {
+        const button = event.target.closest('.group-tab');
+        if (!button) return;
+        selectedGroup = button.dataset.group;
+        renderClients(latestClientList);
+    });
+    document.getElementById('detail-close').onclick = () => document.getElementById('detail-modal').classList.remove('open');
+    document.getElementById('detail-modal').addEventListener('click', event => {
+        if (event.target.id === 'detail-modal') event.currentTarget.classList.remove('open');
+    });
     </script>
 </body>
 </html>

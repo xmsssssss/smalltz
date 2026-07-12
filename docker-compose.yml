@@ -1,0 +1,13 @@
+services:
+  smalltz:
+    build: .
+    container_name: smalltz
+    restart: unless-stopped
+    ports:
+      - "60000:60000"
+      - "60001:60001"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=Asia/Shanghai
+      - DATABASE_URL=sqlite:////app/data/probe.db

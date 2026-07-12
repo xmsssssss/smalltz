@@ -12,7 +12,7 @@ from passlib.hash import bcrypt
 import psutil
 
 # 数据库配置
-SQLALCHEMY_DATABASE_URL = "sqlite:///./probe.db"
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./probe.db")
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False}

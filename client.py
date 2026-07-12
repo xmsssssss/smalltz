@@ -42,13 +42,13 @@ def get_ip_mac():
 
 def get_ip_region():
     try:
-        response = requests.get('http://ip-api.com/json/?fields=countryCode,country', timeout=5)
+        response = requests.get('http://ip-api.com/json/?fields=query,countryCode,country', timeout=5)
         if response.status_code == 200:
             data = response.json()
-            return data.get('countryCode', ''), data.get('country', '')
+            return data.get('countryCode', ''), data.get('country', ''), data.get('query', '')
     except:
         pass
-    return '', ''
+    return '', '', ''
 
 def get_status():
     global last_net_io, last_net_time
@@ -56,6 +56,7 @@ def get_status():
     net = psutil.net_io_counters()
     ip, mac = get_ip_mac()
     memory = psutil.virtual_memory()
+    swap = psutil.swap_memory()
     disk_usage = psutil.disk_usage(disk) if os.path.exists(disk) else None
     
     # 计算网络速度
@@ -78,9 +79,13 @@ def get_status():
             "platform": platform.platform(),
             "os": platform.system(),
             "hostname": platform.node(),
+            "arch": platform.machine(),
+            "cpu_count": psutil.cpu_count(logical=True),
             "cpu_percent": psutil.cpu_percent(),
             "memory_percent": memory.percent,
             "memory_total": f"{memory.total / (1024**3):.2f}GiB",
+            "swap_percent": swap.percent,
+            "swap_total": f"{swap.total / (1024**3):.2f}GiB",
             "disk_usage": disk_usage.percent if disk_usage else None,
             "disk_total": f"{disk_usage.total / (1024**3):.0f}GiB" if disk_usage else None,
             "boot_time": psutil.boot_time(),
@@ -98,7 +103,7 @@ def get_status():
 
 async def send_status(uri, client_id, interval):
     # 获取IP地区信息
-    country_code, country_name = get_ip_region()
+    country_code, country_name, public_ip = get_ip_region()
     print(f"[INFO] 服务器地区: {country_name} ({country_code})")
     
     while True:
@@ -110,6 +115,7 @@ async def send_status(uri, client_id, interval):
                     # 添加地区信息
                     status["system"]["country_code"] = country_code
                     status["system"]["country_name"] = country_name
+                    status["system"]["public_ip"] = public_ip
                     await websocket.send(json.dumps(status))
                     print(f"[SEND] {status}")
                     await asyncio.sleep(interval)

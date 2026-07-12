@@ -2,222 +2,1006 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>管理面板 - 探针服务</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 探针服务</title>
     <link href="/static/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/bootstrap-icons.css">
     <style>
-        html, body {
-            height: 100%;
-            min-height: 100vh;
-            margin: 0;
-            padding: 0;
+        :root {
+            --primary: #6ee7ff;
+            --primary-strong: #38bdf8;
+            --green: #34d399;
+            --red: #fb7185;
+            --amber: #fbbf24;
+            --panel: rgba(15, 23, 42, 0.82);
+            --panel-strong: rgba(15, 23, 42, 0.96);
+            --line: rgba(148, 163, 184, 0.18);
+            --text: #e5eefb;
+            --muted: #94a3b8;
+            --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body { min-height: 100vh; margin: 0; }
+
+        body {
+            color: var(--text);
             font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
-            background: linear-gradient(120deg, #f5f7fa 60%, #c3cfe2 100%);
-            color: #222;
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 34rem),
+                radial-gradient(circle at 85% 10%, rgba(52, 211, 153, 0.14), transparent 28rem),
+                linear-gradient(135deg, #08111f 0%, #0f172a 58%, #111827 100%);
         }
-        .admin-header {
-            width: 100%;
-            background: linear-gradient(90deg, #e0e6ef 60%, #6ec1e4 100%);
-            border-radius: 0 0 18px 18px;
-            box-shadow: 0 4px 24px 0 #6ec1e422;
-            padding: 32px 0 24px 0;
-            margin-bottom: 32px;
-            text-align: center;
+
+        body.light {
+            --panel: rgba(255, 255, 255, 0.84);
+            --panel-strong: rgba(255, 255, 255, 0.96);
+            --line: rgba(15, 23, 42, 0.12);
+            --text: #0f172a;
+            --muted: #64748b;
+            --shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.25), transparent 34rem),
+                radial-gradient(circle at 85% 10%, rgba(52, 211, 153, 0.18), transparent 28rem),
+                linear-gradient(135deg, #f8fbff 0%, #edf6ff 55%, #eef2ff 100%);
         }
-        .admin-logo {
-            font-size: 2.2rem;
-            color: #2980b9;
-            font-weight: bold;
-            letter-spacing: 2px;
-            user-select: none;
-            text-shadow: 0 2px 8px #6ec1e433;
+
+        .shell {
+            width: min(1240px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 22px 0 34px;
         }
-        .admin-actions {
+
+        .topbar,
+        .panel,
+        .client-card,
+        .group-card {
+            border: 1px solid var(--line);
+            background: var(--panel);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
+        }
+
+        .topbar {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             align-items: center;
             gap: 16px;
-            margin-top: 12px;
-            margin-right: 32px;
+            padding: 18px;
+            border-radius: 24px;
         }
-        .admin-btn {
-            color: #fff;
-            background: linear-gradient(90deg, #6ec1e4 0%, #2980b9 100%);
-            border: none;
-            border-radius: 8px;
-            padding: 8px 22px;
-            font-size: 1.08rem;
-            font-weight: bold;
-            letter-spacing: 1px;
-            transition: background 0.2s, box-shadow 0.2s, color 0.2s;
-            box-shadow: 0 2px 8px #6ec1e433;
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            border-radius: 16px;
+            color: #062334;
+            background: linear-gradient(135deg, var(--primary), var(--green));
+            box-shadow: 0 16px 36px rgba(56, 189, 248, 0.26);
+            font-size: 1.45rem;
+        }
+
+        .brand-title {
+            margin: 0;
+            font-size: clamp(1.35rem, 4vw, 2rem);
+            font-weight: 850;
+            letter-spacing: -0.05em;
+        }
+
+        .brand-subtitle {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .top-actions,
+        .button-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-ghost,
+        .btn-solid,
+        .icon-btn {
+            min-height: 40px;
+            border: 1px solid rgba(110, 231, 255, 0.25);
+            border-radius: 999px;
+            color: var(--text);
+            background: rgba(15, 23, 42, 0.48);
+            font-weight: 800;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 14px;
         }
-        .admin-btn:hover {
-            background: linear-gradient(90deg, #2980b9 0%, #6ec1e4 100%);
-            color: #23242a;
-            box-shadow: 0 4px 16px #6ec1e444;
+
+        body.light .btn-ghost,
+        body.light .icon-btn { background: rgba(255, 255, 255, 0.68); }
+
+        .btn-solid {
+            color: #062334;
+            border-color: rgba(110, 231, 255, 0.48);
+            background: linear-gradient(135deg, var(--primary), var(--green));
         }
-        .client-card {
-            margin-bottom: 24px;
-            background: #fff;
+
+        .icon-btn { width: 40px; padding: 0; }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 240px minmax(0, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .side-nav {
+            position: sticky;
+            top: 16px;
+            align-self: start;
+            padding: 10px;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: var(--panel);
+            box-shadow: 0 14px 38px rgba(0, 0, 0, 0.14);
+        }
+
+        .nav-btn {
+            width: 100%;
+            min-height: 44px;
+            margin-bottom: 6px;
+            padding: 0 12px;
+            border: none;
+            border-radius: 14px;
+            color: var(--muted);
+            background: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 850;
+            text-align: left;
+        }
+
+        .nav-btn.active {
+            color: #062334;
+            background: linear-gradient(135deg, var(--primary), var(--green));
+        }
+
+        .panel {
+            border-radius: 24px;
+            padding: 16px;
+            background: var(--panel-strong);
+        }
+
+        .view { display: none; }
+        .view.active { display: block; }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .section-head h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 850;
+        }
+
+        .section-head p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .stat-card {
+            padding: 14px;
+            border: 1px solid var(--line);
             border-radius: 18px;
-            color: #222;
-            box-shadow: 0 2px 16px 0 #6ec1e422;
-            transition: transform 0.18s, box-shadow 0.18s;
+            background: rgba(148, 163, 184, 0.07);
         }
-        .client-card:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 8px 32px 0 #6ec1e444;
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.82rem;
         }
-        .status-indicator {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
+
+        .stat-value {
+            margin-top: 6px;
+            font-size: 2rem;
+            font-weight: 850;
+            letter-spacing: -0.05em;
         }
-        .status-online {
-            background-color: #cdea4a;
-            box-shadow: 0 0 8px 2px #27ae6055;
+
+        .toolbar,
+        .group-tools {
+            display: grid;
+            grid-template-columns: minmax(180px, 1fr) 170px auto;
+            gap: 10px;
+            margin-bottom: 12px;
         }
-        .status-offline {
-            background-color: #e74c3c;
-            box-shadow: 0 0 8px 2px #e74c3c55;
+
+        .input,
+        .select {
+            min-height: 40px;
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            color: var(--text);
+            background: rgba(15, 23, 42, 0.48);
         }
-        .client-title-row {
+
+        body.light .input,
+        body.light .select { background: rgba(255, 255, 255, 0.7); }
+
+        .client-list,
+        .group-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .client-picker {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow-y: auto;
+            padding: 2px;
+        }
+
+        .picker-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 1px solid var(--line);
+            background: rgba(15, 23, 42, 0.5);
+            transition: border-color .15s ease, background .15s ease;
+        }
+
+        body.light .picker-item { background: rgba(255, 255, 255, 0.7); }
+
+        .picker-item:hover { border-color: var(--primary-strong); }
+
+        .picker-item.selected {
+            border-color: var(--primary-strong);
+            background: rgba(56, 189, 248, 0.12);
+        }
+
+        .picker-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            flex: none;
+            accent-color: var(--primary-strong);
+        }
+
+        .picker-body {
+            flex: 1;
+            min-width: 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            flex-wrap: wrap;
+            gap: 10px;
         }
-        .client-title-row h5 {
-            margin-bottom: 0;
-            color: #2980b9;
+
+        .picker-name {
+            font-weight: 700;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
-        .btn-toggle {
-            min-width: 72px;
-            border-radius: 8px;
-            font-weight: bold;
-            background: linear-gradient(90deg, #6ec1e4 0%, #2980b9 100%);
-            border: none;
-            color: #fff;
-            transition: background 0.2s;
+
+        .picker-group {
+            font-size: 0.75rem;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.16);
+            color: var(--muted);
+            white-space: nowrap;
+            flex: none;
         }
-        .btn-toggle.btn-warning {
-            background: linear-gradient(90deg, #f39c12 0%, #e67e22 100%);
-            color: #fff;
+
+        .picker-count {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--muted);
         }
-        .btn-toggle.btn-success {
-            background: linear-gradient(90deg, #27ae60 0%, #2ecc71 100%);
-            color: #fff;
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(2, 6, 23, 0.72);
+            z-index: 50;
+            backdrop-filter: blur(6px);
+            animation: modalFade .16s ease;
         }
-        .btn-toggle.btn-danger {
-            background: linear-gradient(90deg, #e74c3c 0%, #c0392b 100%);
-            color: #fff;
-        }
-        .btn-toggle:hover {
-            filter: brightness(1.08);
-        }
-        .status-data {
-            background: #f5f7fa;
-            border-radius: 8px;
-            padding: 10px 14px;
-            color: #2980b9;
-            font-size: 0.98rem;
-            margin-bottom: 8px;
-        }
-        .client-actions {
+
+        .modal-overlay[hidden] { display: none; }
+
+        .modal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: min(760px, calc(100% - 40px));
+            max-height: min(86vh, 680px);
             display: flex;
-            gap: 8px;
+            flex-direction: column;
+            border-radius: 22px;
+            border: 1px solid var(--line);
+            background: var(--panel-strong);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(24px);
+            overflow: hidden;
+            animation: modalPop .18s cubic-bezier(.2, .8, .3, 1);
         }
-        @media (max-width: 600px) {
-            .admin-header { padding: 18px 0 12px 0; }
-            .client-title-row { flex-direction: column; align-items: flex-start; }
-            .admin-actions { flex-direction: column; gap: 8px; margin-right: 0; }
-            .client-actions { flex-direction: column; }
+
+        @keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
+
+        @keyframes modalPop { from { opacity: 0; transform: translate(-50%, -50%) translateY(12px) scale(.98); } to { opacity: 1; transform: translate(-50%, -50%); } }
+
+        .modal-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--line);
+            flex: none;
+        }
+
+        .modal-title { display: flex; align-items: center; gap: 12px; }
+
+        .modal-icon {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            font-size: 1.2rem;
+            color: #061321;
+            background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+        }
+
+        .modal-head h3 { margin: 0; font-size: 1.12rem; }
+
+        .modal-subtitle { margin: 2px 0 0; font-size: 0.82rem; color: var(--muted); }
+
+        .modal-search {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            margin: 0 20px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: rgba(15, 23, 42, 0.5);
+            flex: none;
+        }
+
+        body.light .modal-search { background: rgba(255, 255, 255, 0.7); }
+
+        .modal-search i { color: var(--muted); }
+
+        .modal-search input {
+            flex: 1;
+            min-height: 42px;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 0.92rem;
+        }
+
+        .btn-sm { padding: 6px 10px; font-size: 0.82rem; }
+
+        .modal .client-picker {
+            flex: 1;
+            margin: 14px 20px;
+            overflow-y: auto;
+            padding-right: 6px;
+            min-height: 120px;
+        }
+
+        .modal-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 14px 20px;
+            border-top: 1px solid var(--line);
+            background: rgba(8, 17, 31, 0.35);
+            flex: none;
+        }
+
+        body.light .modal-foot { background: rgba(255, 255, 255, 0.5); }
+
+        .modal-foot-actions { display: flex; gap: 10px; }
+
+        .client-card,
+        .group-card {
+            position: relative;
+            border-radius: 18px;
+            padding: 14px 14px 14px 20px;
+            background: rgba(15, 23, 42, 0.7);
+            box-shadow: none;
+        }
+
+        body.light .client-card,
+        body.light .group-card { background: rgba(255, 255, 255, 0.72); }
+
+        .group-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .client-card::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 10px;
+            bottom: 10px;
+            width: 4px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, var(--green), var(--primary));
+        }
+
+        .client-card.hidden-client::before { background: linear-gradient(180deg, var(--amber), #f97316); }
+
+        .client-top {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: start;
+        }
+
+        .client-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            font-weight: 850;
+            font-size: 1rem;
+        }
+
+        .client-name span:last-child {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .status-pill {
+            padding: 4px 8px;
+            border-radius: 999px;
+            color: #052e1b;
+            background: rgba(52, 211, 153, 0.92);
+            font-size: 0.76rem;
+            font-weight: 850;
+        }
+
+        .status-pill.hidden { color: #451a03; background: rgba(251, 191, 36, 0.94); }
+
+        .client-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        .raw-json {
+            margin-top: 12px;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: rgba(8, 17, 31, 0.42);
+        }
+
+        body.light .raw-json { background: rgba(255, 255, 255, 0.62); }
+
+        .raw-json summary {
+            cursor: pointer;
+            padding: 10px 12px;
+            color: var(--primary);
+            font-weight: 850;
+        }
+
+        .raw-json pre {
+            max-height: 260px;
+            overflow: auto;
+            margin: 0;
+            padding: 0 12px 12px;
+            color: #bae6fd;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 0.84rem;
+        }
+
+        body.light .raw-json pre { color: #0f172a; }
+
+        .empty-state,
+        .error-state {
+            padding: 34px 18px;
+            text-align: center;
+            border: 1px dashed var(--line);
+            border-radius: 18px;
+            color: var(--muted);
+            background: rgba(148, 163, 184, 0.06);
+        }
+
+        .error-state { color: var(--red); }
+
+        @media (max-width: 920px) {
+            .layout { grid-template-columns: 1fr; }
+            .side-nav { position: static; display: flex; overflow-x: auto; }
+            .nav-btn { width: auto; flex: 1 0 auto; margin-bottom: 0; }
+            .toolbar,
+            .group-tools { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .client-top { grid-template-columns: 1fr; }
+            .client-actions { grid-column: 1 / -1; }
+            .topbar { align-items: stretch; flex-direction: column; }
+            .top-actions { width: 100%; }
+            .top-actions .btn-ghost { flex: 1; }
+        }
+
+        @media (max-width: 520px) {
+            .shell { width: min(100% - 20px, 640px); padding-top: 10px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .stat-value { font-size: 1.6rem; }
+            .client-actions { display: grid; grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
 <body>
-    <div class="admin-header">
-        <div class="admin-logo">🛡️ 探针管理面板</div>
-        <div class="admin-actions">
-            <a href="/" class="admin-btn"><i class="bi bi-house-door"></i> 返回主页</a>
-            <a href="/logout" class="admin-btn">退出登录</a>
+    <main class="shell">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-icon"><i class="bi bi-command"></i></div>
+                <div>
+                    <h1 class="brand-title">管理控制台</h1>
+                    <div class="brand-subtitle">分组、客户端、状态数据分区管理</div>
+                </div>
+            </div>
+            <nav class="top-actions" aria-label="后台操作">
+                <a class="btn-ghost" href="/"><i class="bi bi-house-door"></i>返回首页</a>
+                <a class="btn-ghost" href="/logout"><i class="bi bi-box-arrow-right"></i>退出</a>
+                <button type="button" class="icon-btn" id="theme-toggle" aria-label="切换主题"><i class="bi bi-brightness-high"></i></button>
+            </nav>
+        </header>
+
+        <div class="layout">
+            <aside class="side-nav" aria-label="后台导航">
+                <button class="nav-btn active" data-view="overview"><i class="bi bi-grid"></i>概览</button>
+                <button class="nav-btn" data-view="clients"><i class="bi bi-hdd-network"></i>客户端</button>
+                <button class="nav-btn" data-view="groups"><i class="bi bi-folder2-open"></i>分组</button>
+            </aside>
+
+            <section class="content">
+                <section class="view active" id="view-overview">
+                    <div class="panel">
+                        <div class="section-head">
+                            <div>
+                                <h2>运行概览</h2>
+                                <p>快速了解客户端数量、显示状态和分组规模。</p>
+                            </div>
+                            <button type="button" class="btn-solid" id="refresh-overview"><i class="bi bi-arrow-clockwise"></i>刷新</button>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-card"><div class="stat-label">总客户端</div><div class="stat-value" id="stat-total">0</div></div>
+                            <div class="stat-card"><div class="stat-label">显示中</div><div class="stat-value" id="stat-active">0</div></div>
+                            <div class="stat-card"><div class="stat-label">已隐藏</div><div class="stat-value" id="stat-hidden">0</div></div>
+                            <div class="stat-card"><div class="stat-label">分组数</div><div class="stat-value" id="stat-groups">0</div></div>
+                        </div>
+                        <div class="group-list mt-3" id="overview-groups"></div>
+                    </div>
+                </section>
+
+                <section class="view" id="view-clients">
+                    <div class="panel">
+                        <div class="section-head">
+                            <div>
+                                <h2>客户端管理</h2>
+                                <p>搜索、筛选、编辑备注/分组，隐藏或删除客户端。</p>
+                            </div>
+                            <button type="button" class="btn-solid" id="refresh-clients"><i class="bi bi-arrow-clockwise"></i>刷新</button>
+                        </div>
+                        <div class="toolbar">
+                            <input class="input" id="client-search" placeholder="搜索名称、备注、分组、IP">
+                            <select class="select" id="group-filter"><option value="全部">全部分组</option></select>
+                        </div>
+                        <div class="client-list" id="clients-container"></div>
+                    </div>
+                </section>
+
+                <section class="view" id="view-groups">
+                    <div class="panel">
+                        <div class="section-head">
+                            <div>
+                                <h2>分组管理</h2>
+                                <p>新建分组，或点击分组上的“编辑”查看并勾选客户端。</p>
+                            </div>
+                            <button type="button" class="btn-solid" id="refresh-groups"><i class="bi bi-arrow-clockwise"></i>刷新</button>
+                        </div>
+                        <div class="group-tools">
+                            <input class="input" id="new-group-name" placeholder="输入新分组名，例如 香港节点">
+                            <button type="button" class="btn-solid" id="create-group-btn"><i class="bi bi-folder-plus"></i>新建</button>
+                        </div>
+                        <div class="group-list" id="group-cards"></div>
+                    </div>
+                </section>
+            </section>
         </div>
-    </div>
-    <div class="container">
-        <h3 class="mb-4" style="color:#2980b9;">所有客户端</h3>
-        <div class="row">
-            <div class="col-md-12">
-                <div id="clients-container">
-                    <!-- 客户端列表由JS动态渲染 -->
+    </main>
+
+    <div class="modal-overlay" id="group-modal" hidden>
+        <div class="modal" role="dialog" aria-modal="true">
+            <div class="modal-head">
+                <div class="modal-title">
+                    <span class="modal-icon"><i class="bi bi-folder2-open"></i></span>
+                    <div>
+                        <h3 id="group-modal-title">编辑分组</h3>
+                        <p class="modal-subtitle" id="group-modal-subtitle">勾选要归入该分组的客户端</p>
+                    </div>
+                </div>
+                <button type="button" class="icon-btn" id="group-modal-close" aria-label="关闭"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="modal-search">
+                <i class="bi bi-search"></i>
+                <input id="group-modal-search" placeholder="搜索名称、备注、IP">
+                <button type="button" class="btn-ghost btn-sm" id="group-modal-select-visible"><i class="bi bi-check2-all"></i>全选当前</button>
+            </div>
+            <div class="client-picker" id="group-modal-list"></div>
+            <div class="modal-foot">
+                <span class="picker-count" id="group-modal-count">已选 0 台</span>
+                <div class="modal-foot-actions">
+                    <button type="button" class="btn-ghost" id="group-modal-cancel">取消</button>
+                    <button type="button" class="btn-solid" id="group-modal-save"><i class="bi bi-check-lg"></i>保存</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-    async function fetchClients() {
-        const res = await fetch('/api/clients');
-        const clients = await res.json();
-        renderClients(clients);
+    let clients = [];
+    let currentView = 'overview';
+
+    const themeBtn = document.getElementById('theme-toggle');
+
+    function setTheme(light) {
+        document.body.classList.toggle('light', light);
+        themeBtn.innerHTML = light ? '<i class="bi bi-moon"></i>' : '<i class="bi bi-brightness-high"></i>';
+        localStorage.setItem('theme', light ? 'light' : 'dark');
     }
-    function renderClients(clients) {
-        let html = '';
-        clients.forEach(client => {
-            html += `<div class="client-card card mb-3" id="client-${client.client_id}">
-                <div class="card-body">
-                    <div class="client-title-row mb-2">
-                        <h5 class="card-title">
-                            <span class="status-indicator ${client.is_active ? 'status-online' : 'status-offline'}"></span>
-                            ${client.name}
-                        </h5>
-                        <div class="client-actions">
-                            <button type="button" class="btn btn-toggle btn-sm btn-danger" onclick="deleteClient('${client.client_id}')">
-                                删除
-                            </button>
-                            <button type="button" class="btn btn-toggle btn-sm ${client.is_active ? 'btn-warning' : 'btn-success'}" onclick="toggleClient('${client.client_id}')">
-                                ${client.is_active ? '隐藏' : '显示'}
-                            </button>
+
+    if (localStorage.getItem('theme') === 'light') setTheme(true);
+    themeBtn.onclick = () => setTheme(!document.body.classList.contains('light'));
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>'"]/g, char => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        }[char]));
+    }
+
+    function parseStatus(status) {
+        try {
+            const parsed = JSON.parse(status || '{}');
+            return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (error) {
+            return {};
+        }
+    }
+
+    function safeJson(status) {
+        try { return JSON.stringify(JSON.parse(status || '{}'), null, 2); }
+        catch (error) { return status || '{}'; }
+    }
+
+    function fmtLastSeen(value) {
+        if (!value) return '暂无上报';
+        let text = String(value).split('.')[0];
+        if (text.length === 19 && !/[zZ]|[+-]\d\d:?\d\d$/.test(text)) text += 'Z';
+        const time = Date.parse(text);
+        return Number.isNaN(time) ? '暂无上报' : new Date(time).toLocaleString('zh-CN', { hour12: false });
+    }
+
+    function getGroups() {
+        return Array.from(new Set(clients.map(client => client.group_name || '默认'))).sort((a, b) => a.localeCompare(b));
+    }
+
+    function renderStats() {
+        const groups = getGroups();
+        document.getElementById('stat-total').innerText = clients.length;
+        document.getElementById('stat-active').innerText = clients.filter(client => client.is_active).length;
+        document.getElementById('stat-hidden').innerText = clients.filter(client => !client.is_active).length;
+        document.getElementById('stat-groups').innerText = groups.length;
+        document.getElementById('overview-groups').innerHTML = groups.length ? groups.map(group => {
+            const count = clients.filter(client => (client.group_name || '默认') === group).length;
+            return `<div class="group-card"><strong>${escapeHtml(group)}</strong><div class="client-meta"><span>${count} 台客户端</span></div></div>`;
+        }).join('') : '<div class="empty-state">暂无分组</div>';
+    }
+
+    function renderGroupFilter() {
+        const select = document.getElementById('group-filter');
+        const current = select.value || '全部';
+        const groups = getGroups();
+        select.innerHTML = '<option value="全部">全部分组</option>' + groups.map(group => `<option value="${escapeHtml(group)}">${escapeHtml(group)}</option>`).join('');
+        select.value = groups.includes(current) ? current : '全部';
+    }
+
+    function filteredClients() {
+        const keyword = document.getElementById('client-search').value.trim().toLowerCase();
+        const group = document.getElementById('group-filter').value || '全部';
+        return clients.filter(client => {
+            const status = parseStatus(client.status);
+            const sys = status.system || {};
+            const text = [client.client_id, client.name, client.note, client.group_name, sys.ip, sys.public_ip].join(' ').toLowerCase();
+            return (group === '全部' || (client.group_name || '默认') === group) && (!keyword || text.includes(keyword));
+        });
+    }
+
+    function renderClients() {
+        const visible = filteredClients();
+        const container = document.getElementById('clients-container');
+        if (!visible.length) {
+            container.innerHTML = '<div class="empty-state">没有匹配的客户端</div>';
+            return;
+        }
+        container.innerHTML = visible.map(client => {
+            const clientId = String(client.client_id || '');
+            const encodedId = encodeURIComponent(clientId);
+            const status = parseStatus(client.status);
+            const sys = status.system || {};
+            const title = client.name || clientId || '未知客户端';
+            const groupName = client.group_name || '默认';
+            const note = client.note || '';
+            return `<article class="client-card${client.is_active ? '' : ' hidden-client'}">
+                <div class="client-top">
+                    <div>
+                        <div class="client-name"><span class="status-pill${client.is_active ? '' : ' hidden'}">${client.is_active ? '显示' : '隐藏'}</span><span>${escapeHtml(title)}</span></div>
+                        <div class="client-meta">
+                            <span>分组：${escapeHtml(groupName)}</span>
+                            ${note ? `<span>备注：${escapeHtml(note)}</span>` : ''}
+                            <span>系统：${escapeHtml(sys.os || '-')}</span>
+                            <span>公网：${escapeHtml(sys.public_ip || '-')}</span>
+                            <span>最后：${escapeHtml(fmtLastSeen(client.last_seen))}</span>
                         </div>
                     </div>
-
-                    <div class="status-data mb-2">
-                        <pre style="margin:0; background:none; border:none; color:#2980b9;">${client.status}</pre>
+                    <div class="button-row client-actions">
+                        <button type="button" class="btn-ghost" data-action="toggle" data-id="${encodedId}"><i class="bi ${client.is_active ? 'bi-eye-slash' : 'bi-eye'}"></i>${client.is_active ? '隐藏' : '显示'}</button>
+                        <button type="button" class="btn-ghost" data-action="delete" data-id="${encodedId}"><i class="bi bi-trash"></i>删除</button>
                     </div>
                 </div>
-            </div>`;
-        });
-        document.getElementById('clients-container').innerHTML = html;
+                <details class="raw-json"><summary><i class="bi bi-braces"></i> 原始上报 JSON</summary><pre>${escapeHtml(safeJson(client.status))}</pre></details>
+            </article>`;
+        }).join('');
     }
+
+    function renderGroups() {
+        const groups = getGroups();
+        document.getElementById('group-cards').innerHTML = groups.length ? groups.map(group => {
+            const groupClients = clients.filter(client => (client.group_name || '默认') === group);
+            const encodedGroup = encodeURIComponent(group);
+            return `<div class="group-card">
+                <div class="group-card-head">
+                    <strong>${escapeHtml(group)}</strong>
+                    <button type="button" class="btn-ghost" data-action="edit-group" data-group="${encodedGroup}"><i class="bi bi-pencil-square"></i>编辑</button>
+                </div>
+                <div class="client-meta"><span>${groupClients.length} 台客户端</span><span>${groupClients.map(client => escapeHtml(client.name || client.client_id)).join(' / ')}</span></div>
+            </div>`;
+        }).join('') : '<div class="empty-state">暂无分组，先在上方创建并归组</div>';
+    }
+
+    function renderAll() {
+        renderStats();
+        renderGroupFilter();
+        renderClients();
+        renderGroups();
+    }
+
+    let modalGroup = null;
+    const modalSelected = new Set();
+
+    function openGroupModal(group) {
+        modalGroup = group;
+        modalSelected.clear();
+        clients.forEach(client => {
+            if ((client.group_name || '默认') === group) modalSelected.add(String(client.client_id || ''));
+        });
+        document.getElementById('group-modal-title').innerText = group;
+        document.getElementById('group-modal-subtitle').innerText = '勾选要归入该分组的客户端，取消勾选则移回“默认”';
+        document.getElementById('group-modal-search').value = '';
+        document.getElementById('group-modal').hidden = false;
+        renderGroupModalList();
+    }
+
+    function closeGroupModal() {
+        modalGroup = null;
+        modalSelected.clear();
+        document.getElementById('group-modal').hidden = true;
+    }
+
+    function modalFilteredClients() {
+        const keyword = document.getElementById('group-modal-search').value.trim().toLowerCase();
+        return clients.filter(client => {
+            const status = parseStatus(client.status);
+            const sys = status.system || {};
+            const text = [client.client_id, client.name, client.note, client.group_name, sys.ip, sys.public_ip].join(' ').toLowerCase();
+            return !keyword || text.includes(keyword);
+        });
+    }
+
+    function renderGroupModalList() {
+        document.getElementById('group-modal-count').innerText = `已选 ${modalSelected.size} 台`;
+        const container = document.getElementById('group-modal-list');
+        const list = modalFilteredClients();
+        if (!list.length) {
+            container.innerHTML = '<div class="empty-state">没有匹配的客户端</div>';
+            return;
+        }
+        container.innerHTML = list.map(client => {
+            const clientId = String(client.client_id || '');
+            const encodedId = encodeURIComponent(clientId);
+            const title = client.name || clientId || '未知客户端';
+            const groupName = client.group_name || '默认';
+            const selected = modalSelected.has(clientId);
+            return `<label class="picker-item${selected ? ' selected' : ''}">
+                <input type="checkbox" class="picker-select" data-id="${encodedId}" ${selected ? 'checked' : ''}>
+                <span class="picker-body">
+                    <span class="picker-name">${escapeHtml(title)}</span>
+                    <span class="picker-group">当前：${escapeHtml(groupName)}</span>
+                </span>
+            </label>`;
+        }).join('');
+    }
+
+    async function saveGroupModal() {
+        if (!modalGroup) return;
+        const added = Array.from(modalSelected);
+        const removed = clients
+            .filter(client => (client.group_name || '默认') === modalGroup && !modalSelected.has(String(client.client_id || '')))
+            .map(client => String(client.client_id || ''));
+        if (added.length) {
+            const res = await fetch('/api/groups/assign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ group_name: modalGroup, client_ids: added })
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        }
+        if (removed.length) {
+            const res = await fetch('/api/groups/assign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ group_name: '默认', client_ids: removed })
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        }
+        closeGroupModal();
+        await fetchClients();
+    }
+
+    async function fetchClients() {
+        try {
+            const res = await fetch('/api/clients');
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            clients = await res.json();
+            renderAll();
+        } catch (error) {
+            document.getElementById('clients-container').innerHTML = '<div class="error-state">无法获取客户端数据</div>';
+            console.error('fetchClients error:', error);
+        }
+    }
+
     async function toggleClient(clientId) {
-        await fetch(`/api/clients/${clientId}/toggle`, { method: 'POST' });
-        fetchClients();
+        const response = await fetch(`/api/clients/${clientId}/toggle`, { method: 'POST' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        await fetchClients();
     }
 
     async function deleteClient(clientId) {
-        if (!confirm('确定要删除这个客户端吗？此操作不可恢复！')) {
-            return;
-        }
-        
-        try {
-            const response = await fetch(`/api/clients/${clientId}`, {
-                method: 'DELETE'
-            });
-            if (response.ok) {
-                const element = document.getElementById(`client-${clientId}`);
-                element.remove();
-            } else {
-                alert('删除失败，请重试');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('删除失败，请重试');
-        }
+        if (!confirm('确定删除这个客户端吗？')) return;
+        const response = await fetch(`/api/clients/${clientId}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        await fetchClients();
     }
+
+    function createGroup() {
+        const groupName = document.getElementById('new-group-name').value.trim();
+        if (!groupName) return alert('请输入分组名');
+        document.getElementById('new-group-name').value = '';
+        openGroupModal(groupName);
+    }
+
+    document.querySelectorAll('.nav-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            currentView = button.dataset.view;
+            document.querySelectorAll('.nav-btn').forEach(item => item.classList.toggle('active', item === button));
+            document.querySelectorAll('.view').forEach(view => view.classList.toggle('active', view.id === `view-${currentView}`));
+        });
+    });
+
+    document.getElementById('group-cards').addEventListener('click', event => {
+        const button = event.target.closest('button[data-action="edit-group"]');
+        if (!button) return;
+        openGroupModal(decodeURIComponent(button.dataset.group));
+    });
+
+    document.getElementById('group-modal-list').addEventListener('change', event => {
+        const input = event.target.closest('.picker-select');
+        if (!input) return;
+        const clientId = decodeURIComponent(input.dataset.id);
+        if (input.checked) modalSelected.add(clientId); else modalSelected.delete(clientId);
+        renderGroupModalList();
+    });
+
+    document.getElementById('group-modal-search').addEventListener('input', renderGroupModalList);
+    document.getElementById('group-modal-select-visible').addEventListener('click', () => {
+        modalFilteredClients().forEach(client => modalSelected.add(String(client.client_id || '')));
+        renderGroupModalList();
+    });
+    document.getElementById('group-modal-close').addEventListener('click', closeGroupModal);
+    document.getElementById('group-modal-cancel').addEventListener('click', closeGroupModal);
+    document.getElementById('group-modal').addEventListener('click', event => {
+        if (event.target.id === 'group-modal') closeGroupModal();
+    });
+    document.getElementById('group-modal-save').addEventListener('click', () => {
+        saveGroupModal().catch(error => {
+            console.error('save group error:', error);
+            alert('保存分组失败，请重新登录或稍后重试');
+        });
+    });
+    document.getElementById('refresh-groups').addEventListener('click', fetchClients);
+
+    document.getElementById('clients-container').addEventListener('click', event => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.dataset.action;
+        const clientId = button.dataset.id;
+        const task = action === 'delete' ? deleteClient(clientId) : toggleClient(clientId);
+        task.catch(error => {
+            console.error(`${action} error:`, error);
+            alert('操作失败，请重新登录或稍后重试');
+        });
+    });
+
+    document.getElementById('client-search').addEventListener('input', renderClients);
+    document.getElementById('group-filter').addEventListener('change', renderClients);
+    document.getElementById('refresh-overview').addEventListener('click', fetchClients);
+    document.getElementById('refresh-clients').addEventListener('click', fetchClients);
+    document.getElementById('create-group-btn').addEventListener('click', createGroup);
+    document.getElementById('new-group-name').addEventListener('keydown', event => {
+        if (event.key === 'Enter') createGroup();
+    });
+
     fetchClients();
     </script>
 </body>

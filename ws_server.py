@@ -4,7 +4,7 @@ import json
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
-from web import Client, Base, SQLALCHEMY_DATABASE_URL
+from web import Client, ClientHistory, Base, SQLALCHEMY_DATABASE_URL
 import argparse
 from urllib.parse import unquote
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
@@ -28,6 +28,7 @@ async def handler(websocket, path):
             data = await websocket.recv()
             client.status = data
             client.last_seen = datetime.utcnow()
+            db.add(ClientHistory(client_id=client_id, status=data))
             db.commit()
             # print(f"收到客户端 {client_id} 状态: {data}")
 

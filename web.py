@@ -1,8 +1,8 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, Request, Form, Response
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, Request, Form, Response, Body
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, text, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 import json
@@ -15,7 +15,7 @@ import os
 from passlib.hash import bcrypt
 
 # 数据库配置
-SQLALCHEMY_DATABASE_URL = "sqlite:///./probe.db"
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./probe.db")
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False}
@@ -30,8 +30,18 @@ class Client(Base):
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(String, unique=True, index=True)
     name = Column(String)
+    note = Column(String, default="")
+    group_name = Column(String, default="默认")
     is_active = Column(Boolean, default=True)
     last_seen = Column(DateTime, default=datetime.utcnow)
+    status = Column(String, default="{}")
+
+class ClientHistory(Base):
+    __tablename__ = "client_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(String, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
     status = Column(String, default="{}")
 
 class User(Base):
@@ -42,6 +52,18 @@ class User(Base):
 
 # 创建数据库表
 Base.metadata.create_all(bind=engine)
+
+def ensure_schema():
+    inspector = inspect(engine)
+    if "clients" in inspector.get_table_names():
+        columns = {column["name"] for column in inspector.get_columns("clients")}
+        with engine.begin() as conn:
+            if "note" not in columns:
+                conn.execute(text("ALTER TABLE clients ADD COLUMN note VARCHAR DEFAULT ''"))
+            if "group_name" not in columns:
+                conn.execute(text("ALTER TABLE clients ADD COLUMN group_name VARCHAR DEFAULT '默认'"))
+
+ensure_schema()
 
 # 初始化账号密码
 def init_admin_user():
@@ -172,8 +194,61 @@ async def get_clients(db: Session = Depends(get_db)):
             clients_for_frontend.append(client_data)
     return clients_for_frontend
 
+@app.get("/api/clients/{client_id}/history")
+async def get_client_history(client_id: str, limit: int = 60, db: Session = Depends(get_db)):
+    limit = max(1, min(limit, 300))
+    rows = (
+        db.query(ClientHistory)
+        .filter(ClientHistory.client_id == client_id)
+        .order_by(ClientHistory.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {"created_at": row.created_at, "status": row.status}
+        for row in reversed(rows)
+    ]
+
+@app.put("/api/clients/{client_id}/meta")
+async def update_client_meta(
+    client_id: str,
+    request: Request,
+    payload: dict = Body(...),
+    db: Session = Depends(get_db)
+):
+    if not require_login(request, db):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    client = db.query(Client).filter(Client.client_id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    if "note" in payload:
+        client.note = str(payload.get("note", ""))[:200]
+    client.group_name = str(payload.get("group_name", "默认") or "默认")[:80]
+    db.commit()
+    return {"status": "success"}
+
+@app.post("/api/groups/assign")
+async def assign_group(
+    request: Request,
+    payload: dict = Body(...),
+    db: Session = Depends(get_db)
+):
+    if not require_login(request, db):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    group_name = str(payload.get("group_name", "默认") or "默认")[:80]
+    client_ids = payload.get("client_ids", [])
+    if not isinstance(client_ids, list):
+        raise HTTPException(status_code=400, detail="client_ids must be a list")
+    clients = db.query(Client).filter(Client.client_id.in_([str(client_id) for client_id in client_ids])).all()
+    for client in clients:
+        client.group_name = group_name
+    db.commit()
+    return {"status": "success", "updated": len(clients)}
+
 @app.post("/api/clients/{client_id}/toggle")
-async def toggle_client(client_id: str, db: Session = Depends(get_db)):
+async def toggle_client(client_id: str, request: Request, db: Session = Depends(get_db)):
+    if not require_login(request, db):
+        raise HTTPException(status_code=401, detail="Unauthorized")
     client = db.query(Client).filter(Client.client_id == client_id).first()
     if client:
         client.is_active = not client.is_active
@@ -182,7 +257,9 @@ async def toggle_client(client_id: str, db: Session = Depends(get_db)):
     raise HTTPException(status_code=404, detail="Client not found")
 
 @app.delete("/api/clients/{client_id}")
-async def delete_client(client_id: str, db: Session = Depends(get_db)):
+async def delete_client(client_id: str, request: Request, db: Session = Depends(get_db)):
+    if not require_login(request, db):
+        raise HTTPException(status_code=401, detail="Unauthorized")
     client = db.query(Client).filter(Client.client_id == client_id).first()
     if client:
         db.delete(client)

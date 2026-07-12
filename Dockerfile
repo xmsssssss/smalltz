@@ -9,5 +9,8 @@ RUN mkdir -p data
 COPY . .
 
 EXPOSE 60000
+EXPOSE 60001
+
+VOLUME ["/app/data"]
 
 CMD ["python", "start.py", "-p", "60000,60001"] 
