@@ -45,13 +45,17 @@ nohup python3 start.py -p 60000,60001
 # 客户端
 
 ```bash
-git hub https://github.com/xmsssssss/smalltz.git
->pip3 install websockets
->pip3 install psutil 
->nohup python3 client.py -p ip:60001,银河超算,5
+wget https://raw.githubusercontent.com/xmsssssss/smalltz/refs/heads/main/client.py
+pip3 install websockets
+pip3 install psutil 
+nohup python3 client.py -p ip:60001,银河超算,5
 ```
 "ip:60001,银河超算,5"分别代表服务端ip、服务端ip通信端口、客户端名、定时上传间隔
 
+OR
+```bash
+wget https://raw.githubusercontent.com/xmsssssss/smalltz/refs/heads/main/client.py && pip3 install websockets psutil && chmod +x client.py && nohup python3 client.py -p ip:60001,银河超算,5 &
+```
 <img width="1680" height="1130" alt="image" src="https://github.com/user-attachments/assets/8868690f-b7aa-4078-967f-353d633f1071" />
 
 
