@@ -20,39 +20,37 @@ BUG巨多 不对外开放
 
 # 服务端
 ## 1.现在提供docker安装：
->docker pull xiaomustudent/xmtx-s:1.0.0
-
->docker run -d -p 60000:60000 --name xmtz-s -v /root/xmtz/probe.db:/app/probe.db xiaomustudent/xmtx-s:1.0.0
-
+### 方法一：Docker（推荐）
+```bash
+docker run -d \
+  -p 60000:60000 -p 60001:60001 \
+  -v /root/smalltz/data:/app/data \
+  --name smalltz \
+  xiaomustudent/xmtx-s:latest
+```
+### 方法二：Docker Compose
+```bash
+wget https://raw.githubusercontent.com/xmsssssss/smalltz/main/docker-compose.yml
+docker-compose up -d
+```
 
 ## 2.打包下载安装，同目录直接执行以下代码：
->pip3 install -r requirements.txt
-
->nohup python3 start.py -p 60000,60001
-
+```bash
+git hub https://github.com/xmsssssss/smalltz.git
+pip3 install -r requirements.txt
+nohup python3 start.py -p 60000,60001
+```
 "60000,60001"分别代表web端口、通信端口，web登录账号与密码默认都是`admin`，可在登录页面更改。
-
-
-感觉上面有些乱啊，下面是一键安装代码，记得修改端口：
-
->sudo apt-get update && sudo apt-get install git python3 python3-pip && git clone https://github.com/xmsssssss/smalltz.git && cd smalltz && pip3 install -r requirements.txt && nohup python3 start.py -p `60000,60001` &
-
 
 # 客户端
 
-下载client.py
+```bash
+git hub https://github.com/xmsssssss/smalltz.git
 >pip3 install websockets
->
 >pip3 install psutil 
-
 >nohup python3 client.py -p ip:60001,银河超算,5
-
+```
 "ip:60001,银河超算,5"分别代表服务端ip、服务端ip通信端口、客户端名、定时上传间隔
-
-感觉上面有些乱啊，下面是一键安装代码，记得修改ip、端口、名、间隔时间：
-
->wget https://raw.githubusercontent.com/xmsssssss/smalltz/refs/heads/main/client.py && pip3 install websockets psutil && chmod +x client.py && nohup python3 client.py -p `ip:60001,银河超算,5` &
-
 
 <img width="1680" height="1130" alt="image" src="https://github.com/user-attachments/assets/8868690f-b7aa-4078-967f-353d633f1071" />
 
