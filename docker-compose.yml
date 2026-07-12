@@ -1,6 +1,6 @@
 services:
   smalltz:
-    build: .
+    image: xiaomustudent/xmtx-s:latest
     container_name: smalltz
     restart: unless-stopped
     ports:
