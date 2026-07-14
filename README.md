@@ -56,10 +56,10 @@ OR
 ```bash
 wget https://raw.githubusercontent.com/xmsssssss/smalltz/refs/heads/main/client.py && pip3 install websockets psutil && chmod +x client.py && nohup python3 client.py -p ip:60001,银河超算,5 &
 ```
-<img width="1680" height="1130" alt="image" src="https://github.com/user-attachments/assets/8868690f-b7aa-4078-967f-353d633f1071" />
+<img width="2082" height="1221" alt="image" src="https://github.com/user-attachments/assets/e51d3178-491b-464d-8fa9-746b28671ce7" />
 
 
-![image](https://github.com/user-attachments/assets/54a17062-ec4f-4450-bd20-51186729ffe5)
+<img width="2067" height="1010" alt="image" src="https://github.com/user-attachments/assets/67372e06-ee26-43fa-b346-330ae8bf042a" />
 
 # 补充
 1.生成的db文件，用于储存探针数据+账号密码，如果账号密码忘记直接删除db文件即可
